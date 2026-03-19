@@ -1,0 +1,57 @@
+table 'MOD Flex Table Measure Selector'
+	lineageTag: e96317e4-8ed8-4ad2-a8c1-b6bd06fc4e0f
+
+	column MeasureKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MeasureKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	column DisplayLabel
+		summarizeBy: none
+		sortByColumn: MeasureSort
+		isNameInferred
+		sourceColumn: [DisplayLabel]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Domain
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Domain]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MeasureSort
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MeasureSort]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'MOD Flex Table Measure Selector' = calculated
+		mode: import
+		source = ```
+				DATATABLE(
+				    "MeasureKey", STRING,
+				    "DisplayLabel", STRING,
+				    "Domain", STRING,
+				    "MeasureSort", INTEGER,
+				    {
+				        {"metric_1", "{{bindingLabel:MOD_BIND_MEASURE_1}}", "Metric", 1},
+				        {"metric_2", "{{bindingLabel:MOD_BIND_MEASURE_2}}", "Metric", 2},
+				        {"metric_3", "{{bindingLabel:MOD_BIND_MEASURE_3}}", "Metric", 3},
+				        {"metric_4", "{{bindingLabel:MOD_BIND_MEASURE_4}}", "Metric", 4},
+				        {"metric_5", "{{bindingLabel:MOD_BIND_MEASURE_5}}", "Metric", 5},
+				        {"metric_6", "{{bindingLabel:MOD_BIND_MEASURE_6}}", "Metric", 6},
+				        {"metric_7", "{{bindingLabel:MOD_BIND_MEASURE_7}}", "Metric", 7},
+				        {"metric_8", "{{bindingLabel:MOD_BIND_MEASURE_8}}", "Metric", 8},
+				        {"metric_9", "{{bindingLabel:MOD_BIND_MEASURE_9}}", "Metric", 9},
+				        {"metric_10", "{{bindingLabel:MOD_BIND_MEASURE_10}}", "Metric", 10}
+				    }
+				)
+				```

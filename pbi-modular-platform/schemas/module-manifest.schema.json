@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/pbi-modular-platform/schemas/module-manifest.schema.v2.0.0.json",
+  "title": "Power BI Module Manifest",
+  "type": "object",
+  "required": [
+    "moduleId",
+    "version",
+    "domain",
+    "type",
+    "classification",
+    "dependencies",
+    "semanticImpact",
+    "description",
+    "requires",
+    "provides"
+  ],
+  "properties": {
+    "moduleId": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "domain": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "report-only",
+        "semantic"
+      ]
+    },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "report-only",
+        "semantic-light",
+        "semantic-heavy"
+      ]
+    },
+    "dependencies": {
+      "type": "object",
+      "required": [
+        "modules",
+        "capabilities"
+      ],
+      "properties": {
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "moduleId"
+            ],
+            "properties": {
+              "moduleId": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+$"
+              },
+              "domain": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "versionRange": {
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticImpact": {
+      "type": "string",
+      "enum": [
+        "none",
+        "additive",
+        "invasive"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "prototype",
+        "experimental",
+        "stable",
+        "deprecated"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requires": {
+      "type": "object",
+      "properties": {
+        "coreMeasures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "coreColumns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "coreMeasures",
+        "coreColumns"
+      ],
+      "additionalProperties": false
+    },
+    "bindingContract": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "guided",
+            "collection-guided"
+          ]
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "bindingKey",
+              "kind",
+              "required",
+              "label",
+              "description"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bindingKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "measure",
+                  "column"
+                ]
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "semanticRole": {
+                "type": "string"
+              },
+              "defaultValue": {
+                "type": "string",
+                "minLength": 1
+              },
+              "suggestions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "collections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "kind",
+              "label",
+              "description",
+              "itemLabel",
+              "minItems",
+              "maxItems",
+              "defaultVisibleCount",
+              "bindingKeyPrefix"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "measure",
+                  "column"
+                ]
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "itemLabel": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": {
+                "type": "integer"
+              },
+              "maxItems": {
+                "type": "integer"
+              },
+              "defaultVisibleCount": {
+                "type": "integer"
+              },
+              "bindingKeyPrefix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bindingKeySuffix": {
+                "type": "string"
+              },
+              "defaultItems": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "description": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "defaultValue": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "suggestions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rendering": {
+      "type": "object",
+      "required": [
+        "strategy"
+      ],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "static",
+            "flex-flat",
+            "flex-pivot"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "provides": {
+      "type": "object",
+      "properties": {
+        "semanticTables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "reportPage": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "name",
+            "displayName"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "semanticTables"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

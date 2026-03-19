@@ -1,0 +1,100 @@
+table 'MOD Flex Table Axis'
+	lineageTag: 0ea3b2f7-1e8d-4a0f-92fe-5b95f134b925
+
+	column DimensionKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [DimensionKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	column DimensionLabel
+		summarizeBy: none
+		sortByColumn: DimensionSort
+		isNameInferred
+		sourceColumn: [DimensionLabel]
+
+		annotation SummarizationSetBy = Automatic
+
+	column DimensionSort
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [DimensionSort]
+
+		annotation SummarizationSetBy = Automatic
+
+	column AxisLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [AxisLabel]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'MOD Flex Table Axis' = calculated
+		mode: import
+		source =
+				UNION(
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_DIMENSION_1[Value]),
+				            NOT ISBLANK(MOD_BIND_DIMENSION_1[Value])
+				        ),
+				        "DimensionKey", "dimension_1",
+				        "DimensionLabel", "{{bindingLabel:MOD_BIND_DIMENSION_1[Value]}}",
+				        "DimensionSort", 1,
+				        "AxisLabel", MOD_BIND_DIMENSION_1[Value]
+				    ),
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_DIMENSION_2[Value]),
+				            NOT ISBLANK(MOD_BIND_DIMENSION_2[Value])
+				        ),
+				        "DimensionKey", "dimension_2",
+				        "DimensionLabel", "{{bindingLabel:MOD_BIND_DIMENSION_2[Value]}}",
+				        "DimensionSort", 2,
+				        "AxisLabel", MOD_BIND_DIMENSION_2[Value]
+				    ),
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_DIMENSION_3[Value]),
+				            NOT ISBLANK(MOD_BIND_DIMENSION_3[Value])
+				        ),
+				        "DimensionKey", "dimension_3",
+				        "DimensionLabel", "{{bindingLabel:MOD_BIND_DIMENSION_3[Value]}}",
+				        "DimensionSort", 3,
+				        "AxisLabel", MOD_BIND_DIMENSION_3[Value]
+				    ),
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_DIMENSION_4[Value]),
+				            NOT ISBLANK(MOD_BIND_DIMENSION_4[Value])
+				        ),
+				        "DimensionKey", "dimension_4",
+				        "DimensionLabel", "{{bindingLabel:MOD_BIND_DIMENSION_4[Value]}}",
+				        "DimensionSort", 4,
+				        "AxisLabel", MOD_BIND_DIMENSION_4[Value]
+				    ),
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_DIMENSION_5[Value]),
+				            NOT ISBLANK(MOD_BIND_DIMENSION_5[Value])
+				        ),
+				        "DimensionKey", "dimension_5",
+				        "DimensionLabel", "{{bindingLabel:MOD_BIND_DIMENSION_5[Value]}}",
+				        "DimensionSort", 5,
+				        "AxisLabel", MOD_BIND_DIMENSION_5[Value]
+				    ),
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_DIMENSION_6[Value]),
+				            NOT ISBLANK(MOD_BIND_DIMENSION_6[Value])
+				        ),
+				        "DimensionKey", "dimension_6",
+				        "DimensionLabel", "{{bindingLabel:MOD_BIND_DIMENSION_6[Value]}}",
+				        "DimensionSort", 6,
+				        "AxisLabel", MOD_BIND_DIMENSION_6[Value]
+				    )
+				)

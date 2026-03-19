@@ -1,0 +1,43 @@
+table 'MOD Finance Compare Selector'
+
+	measure 'Metric Compare (Selected)' =
+			
+			SWITCH(
+			  SELECTEDVALUE('MOD Finance Compare Selector'[CompareKey], "reference_1"),
+			  "reference_1", [Input Reference Measure 1],
+			  "reference_2", [Input Reference Measure 2]
+			)
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metric Compare Label (Selected)' =
+			
+			SELECTEDVALUE('MOD Finance Compare Selector'[Label], "{{bindingLabel:MOD_BIND_REFERENCE_MEASURE_1}}")
+
+	column CompareKey
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [CompareKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Label
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Label]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'MOD Finance Compare Selector' = calculated
+		mode: import
+		source = ```
+				
+				DATATABLE(
+				    "CompareKey", STRING,
+				    "Label", STRING,
+				    {
+				        {"reference_1", "{{bindingLabel:MOD_BIND_REFERENCE_MEASURE_1}}"},
+				        {"reference_2", "{{bindingLabel:MOD_BIND_REFERENCE_MEASURE_2}}"}
+				    }
+				)
+				```

@@ -1,0 +1,49 @@
+table 'MOD Flex Flat Dimensions'
+	lineageTag: 92ac6f5d-ed1a-4aeb-a2f0-f68b4f9a2c65
+
+	column 'Flat Dimension'
+		lineageTag: 1089f154-0f45-49a5-b996-38003c22a638
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Flat Dimension Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Flat Dimension Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Flat Dimension Fields'
+		isHidden
+		lineageTag: 98c53862-c37a-40d3-8135-16a83a6ec1cb
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Flat Dimension Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Flat Dimension Order'
+		isHidden
+		formatString: 0
+		lineageTag: 6b7d0d30-2a4c-4cc2-b5a1-82fefb445c2b
+		summarizeBy: none
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'MOD Flex Flat Dimensions' = calculated
+		mode: import
+		source =
+				{
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_1[Value]}}", NAMEOF('MOD_BIND_DIMENSION_1'[Value]), 0),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_2[Value]}}", NAMEOF('MOD_BIND_DIMENSION_2'[Value]), 1),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_3[Value]}}", NAMEOF('MOD_BIND_DIMENSION_3'[Value]), 2),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_4[Value]}}", NAMEOF('MOD_BIND_DIMENSION_4'[Value]), 3),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_5[Value]}}", NAMEOF('MOD_BIND_DIMENSION_5'[Value]), 4),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_6[Value]}}", NAMEOF('MOD_BIND_DIMENSION_6'[Value]), 5)
+				}
