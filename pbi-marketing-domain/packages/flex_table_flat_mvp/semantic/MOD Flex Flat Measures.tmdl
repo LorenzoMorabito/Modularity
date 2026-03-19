@@ -1,4 +1,5 @@
 table 'MOD Flex Flat Measures'
+	isHidden
 	lineageTag: 4767d810-c675-49d8-b779-6072ba15bc11
 
 	column 'Flat Measure'

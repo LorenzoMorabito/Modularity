@@ -178,6 +178,90 @@ function Get-PbiUnresolvedBindingTokenFindingsFromDirectory {
     return $results.ToArray()
 }
 
+function Test-PbiTableTextHasImmediateHiddenFlag {
+    param([Parameter(Mandatory = $true)][string]$Text)
+
+    $lines = @($Text -split "\r?\n")
+    $tableLineIndex = -1
+
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        if ($lines[$index] -match '^\s*table\b') {
+            $tableLineIndex = $index
+            break
+        }
+    }
+
+    if ($tableLineIndex -lt 0) {
+        return $false
+    }
+
+    for ($index = $tableLineIndex + 1; $index -lt $lines.Count; $index++) {
+        $line = [string]$lines[$index]
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            continue
+        }
+
+        return ($line.Trim() -eq "isHidden")
+    }
+
+    return $false
+}
+
+function Get-PbiSemanticUxFindingsFromTableMap {
+    param(
+        [Parameter(Mandatory = $true)]$Manifest,
+        [Parameter(Mandatory = $true)]$TableContentMap,
+        [Parameter(Mandatory = $true)][string]$Scope,
+        [Parameter(Mandatory = $true)][string]$Target
+    )
+
+    $results = New-Object System.Collections.Generic.List[object]
+    if (-not $Manifest.semanticUx) {
+        return $results.ToArray()
+    }
+
+    $primaryTable = [string]$Manifest.semanticUx.primaryTable
+    $hiddenTables = @($Manifest.semanticUx.hiddenTables)
+
+    foreach ($tableName in @($Manifest.provides.semanticTables)) {
+        if (-not $TableContentMap.ContainsKey($tableName)) {
+            continue
+        }
+
+        $path = [string]$TableContentMap[$tableName].Path
+        $text = [string]$TableContentMap[$tableName].Text
+        $hasImmediateHiddenFlag = Test-PbiTableTextHasImmediateHiddenFlag -Text $text
+
+        if (($hiddenTables -contains $tableName) -and -not $hasImmediateHiddenFlag) {
+            $results.Add((New-PbiQualityResult -Scope $Scope -Target $Target -RuleId "semantic.table-visibility.standard" -Severity "Error" -Message ("Table '{0}' is declared as hidden in semanticUx but does not declare table-level isHidden immediately after the table header." -f $tableName) -Path $path))
+        }
+
+        if (($tableName -eq $primaryTable) -and $hasImmediateHiddenFlag) {
+            $results.Add((New-PbiQualityResult -Scope $Scope -Target $Target -RuleId "semantic.table-visibility.standard" -Severity "Error" -Message ("Primary semantic table '{0}' must remain visible and cannot declare table-level isHidden." -f $tableName) -Path $path))
+        }
+    }
+
+    return $results.ToArray()
+}
+
+function Get-PbiSemanticTableContentMapFromDirectory {
+    param([Parameter(Mandatory = $true)][string]$RootPath)
+
+    $tableContentMap = @{}
+    if (-not (Test-Path $RootPath)) {
+        return $tableContentMap
+    }
+
+    foreach ($file in (Get-ChildItem -Path $RootPath -Filter "*.tmdl" -File -ErrorAction SilentlyContinue)) {
+        $tableContentMap[[System.IO.Path]::GetFileNameWithoutExtension($file.Name)] = [PSCustomObject]@{
+            Path = $file.FullName
+            Text = (Get-Content -Path $file.FullName -Raw)
+        }
+    }
+
+    return $tableContentMap
+}
+
 function Get-PbiModuleRenderValidationMappings {
     param([Parameter(Mandatory = $true)]$Manifest)
 
@@ -266,6 +350,51 @@ function Get-PbiRenderedModuleSemanticFindings {
     return $results.ToArray()
 }
 
+function Get-PbiModuleSemanticUxFindings {
+    param([Parameter(Mandatory = $true)]$Module)
+
+    $results = New-Object System.Collections.Generic.List[object]
+    $tableDirectory = Join-Path $Module.PackageRoot "semantic"
+
+    foreach ($result in (Get-PbiSemanticUxFindingsFromTableMap -Manifest $Module.Manifest -TableContentMap (Get-PbiSemanticTableContentMapFromDirectory -RootPath $tableDirectory) -Scope "Module" -Target $Module.ModuleId)) {
+        $results.Add($result)
+    }
+
+    $renderingStrategy = Get-PbiModuleRenderingStrategy -Manifest $Module.Manifest
+    if ($renderingStrategy -eq "static") {
+        return $results.ToArray()
+    }
+
+    $validationProject = $null
+    try {
+        $validationProject = New-PbiSemanticRenderValidationProject
+        $validationMappings = Get-PbiModuleRenderValidationMappings -Manifest $Module.Manifest
+        $renderedAssets = @(Get-PbiRenderedModuleSemanticAssets -Project $validationProject -Module $Module -Manifest $Module.Manifest -ResolvedMappings $validationMappings)
+        $renderedTableMap = @{}
+
+        foreach ($asset in $renderedAssets) {
+            $renderedTableMap[[string]$asset.TableName] = [PSCustomObject]@{
+                Path = ("rendered::{0}.tmdl" -f $asset.TableName)
+                Text = [string]$asset.SourceContent
+            }
+        }
+
+        foreach ($result in (Get-PbiSemanticUxFindingsFromTableMap -Manifest $Module.Manifest -TableContentMap $renderedTableMap -Scope "Module" -Target $Module.ModuleId)) {
+            $results.Add($result)
+        }
+    }
+    catch {
+        $results.Add((New-PbiQualityResult -Scope "Module" -Target $Module.ModuleId -RuleId "semantic.table-visibility.standard" -Severity "Error" -Message ("semanticUx rendered visibility validation failed: {0}" -f $_.Exception.Message) -Path $Module.PackageRoot))
+    }
+    finally {
+        if ($validationProject -and (Test-Path $validationProject.ProjectRoot)) {
+            Remove-Item -Path $validationProject.ProjectRoot -Recurse -Force
+        }
+    }
+
+    return $results.ToArray()
+}
+
 function Invoke-PbiModuleSemanticRules {
     param([Parameter(Mandatory = $true)]$Module)
 
@@ -284,6 +413,10 @@ function Invoke-PbiModuleSemanticRules {
     }
 
     foreach ($result in (Get-PbiTmdlLiteralEscapeFindingsFromDirectory -RootPath $tableDirectory -Scope "Module" -Target $Module.ModuleId -RuleId "semantic.tmdl.literal-escape.forbidden")) {
+        $results.Add($result)
+    }
+
+    foreach ($result in (Get-PbiModuleSemanticUxFindings -Module $Module)) {
         $results.Add($result)
     }
 

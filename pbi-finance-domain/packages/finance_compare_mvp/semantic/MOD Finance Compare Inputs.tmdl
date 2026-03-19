@@ -1,4 +1,5 @@
 table 'MOD Finance Compare Inputs'
+	isHidden
 
 	measure 'Input Primary Measure' = [MOD_BIND_PRIMARY_MEASURE]
 

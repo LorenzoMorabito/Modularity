@@ -84,6 +84,7 @@ function New-PbiFlexFlatInputsTemplate {
         $item = $MeasureItems[$index]
         $measureOrdinal = $index + 1
         $lines.Add(("`tmeasure 'Flat Input Metric {0}' = [{1}]" -f $measureOrdinal, $item.bindingKey))
+        $lines.Add("`t`tdisplayFolder: Selected Metrics")
         $lines.Add("")
     }
 
@@ -113,6 +114,7 @@ function New-PbiFlexFlatDimensionsTemplate {
 
     $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add("table 'MOD Flex Flat Dimensions'")
+    $lines.Add("    isHidden")
     $lines.Add("")
     $lines.Add("    column 'Flat Dimension'")
     $lines.Add("        summarizeBy: none")
@@ -162,6 +164,7 @@ function New-PbiFlexFlatMeasuresTemplate {
 
     $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add("table 'MOD Flex Flat Measures'")
+    $lines.Add("    isHidden")
     $lines.Add("")
     $lines.Add("    column 'Flat Measure'")
     $lines.Add("        summarizeBy: none")
@@ -204,6 +207,7 @@ function New-PbiFlexPivotInputsTemplate {
 
     $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add("table 'MOD Flex Table Inputs'")
+    $lines.Add("`tisHidden")
     $lines.Add("")
 
     for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
@@ -239,6 +243,7 @@ function New-PbiFlexPivotMeasureSelectorTemplate {
 
     $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add("table 'MOD Flex Table Measure Selector'")
+    $lines.Add("    isHidden")
     $lines.Add("")
     $lines.Add("    column MeasureKey")
     $lines.Add("        isHidden")
@@ -305,6 +310,7 @@ function New-PbiFlexPivotAxisTemplate {
 
     $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add("table 'MOD Flex Table Axis'")
+    $lines.Add("`tisHidden")
     $lines.Add("")
     $lines.Add("`tcolumn DimensionKey")
     $lines.Add("`t`tisHidden")
@@ -394,6 +400,7 @@ function New-PbiFlexPivotMetricsTemplate {
     $lines.Add(($dimensionSwitchRows -join ",`r`n"))
     $lines.Add("`t`t    BLANK()")
     $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Outputs")
     $lines.Add("")
     $lines.Add("`tmeasure 'Flex Table Row Has Data' =")
     $lines.Add("`t`t")
@@ -415,6 +422,7 @@ function New-PbiFlexPivotMetricsTemplate {
     $lines.Add("`t`t    )")
     $lines.Add("`t`tRETURN")
     $lines.Add("`t`tIF(NonBlankMeasureCount > 0, 1)")
+    $lines.Add("`t`tdisplayFolder: Diagnostics")
     $lines.Add("")
     $lines.Add("`tmeasure 'Flex Table Title' =")
     $lines.Add("`t`t")
@@ -428,6 +436,7 @@ function New-PbiFlexPivotMetricsTemplate {
     $lines.Add("`t`t    )")
     $lines.Add("`t`tRETURN")
     $lines.Add(("`t`t""Flexible Metrics Pivot | "" & COALESCE(SelectedDimensions, ""{0}"")" -f $fallbackLabel))
+    $lines.Add("`t`tdisplayFolder: Presentation")
     $lines.Add("")
     $lines.Add("`tcolumn Column")
     $lines.Add("`t`tisHidden")

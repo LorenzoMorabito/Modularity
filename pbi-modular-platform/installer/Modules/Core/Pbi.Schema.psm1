@@ -218,6 +218,7 @@ function Test-PbiModuleManifestContract {
     $errors = New-Object System.Collections.Generic.List[object]
     $semanticTables = @($Manifest.provides.semanticTables)
     $reportPage = $Manifest.provides.reportPage
+    $semanticUx = if ($Manifest.PSObject.Properties['semanticUx']) { $Manifest.semanticUx } else { $null }
 
     if ($Manifest.type -eq "report-only") {
         if ($Manifest.classification -ne "report-only") {
@@ -249,6 +250,10 @@ function Test-PbiModuleManifestContract {
         if ($semanticTables.Count -eq 0) {
             $errors.Add((New-PbiSchemaValidationError -Path "$.provides.semanticTables" -Message "Semantic modules must provide at least one semantic table."))
         }
+
+        if (-not $semanticUx) {
+            $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx" -Message "Semantic modules must declare semanticUx with one visible primary table and the remaining hidden tables."))
+        }
     }
 
     if (($Manifest.classification -eq "semantic-light") -and ($Manifest.semanticImpact -ne "additive")) {
@@ -257,6 +262,41 @@ function Test-PbiModuleManifestContract {
 
     if (($Manifest.semanticImpact -eq "invasive") -and ($Manifest.classification -ne "semantic-heavy")) {
         $errors.Add((New-PbiSchemaValidationError -Path "$.classification" -Message "semanticImpact 'invasive' is allowed only for semantic-heavy modules."))
+    }
+
+    if ($semanticUx) {
+        $primaryTable = [string]$semanticUx.primaryTable
+        $hiddenTables = @($semanticUx.hiddenTables)
+        $uniqueHiddenTables = @($hiddenTables | Sort-Object -Unique)
+
+        if ([string]::IsNullOrWhiteSpace($primaryTable)) {
+            $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.primaryTable" -Message "primaryTable cannot be empty."))
+        }
+        elseif ($semanticTables -notcontains $primaryTable) {
+            $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.primaryTable" -Message "primaryTable must be declared in provides.semanticTables."))
+        }
+
+        if ($hiddenTables.Count -ne $uniqueHiddenTables.Count) {
+            $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.hiddenTables" -Message "hiddenTables cannot contain duplicates."))
+        }
+
+        foreach ($hiddenTable in $uniqueHiddenTables) {
+            if ($semanticTables -notcontains $hiddenTable) {
+                $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.hiddenTables" -Message ("hiddenTable '{0}' must be declared in provides.semanticTables." -f $hiddenTable)))
+            }
+        }
+
+        if ($uniqueHiddenTables -contains $primaryTable) {
+            $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.hiddenTables" -Message "primaryTable cannot also be listed in hiddenTables."))
+        }
+
+        if ($Manifest.type -eq "semantic") {
+            $expectedHiddenTables = @($semanticTables | Where-Object { $_ -ne $primaryTable } | Sort-Object -Unique)
+            $actualHiddenTables = @($uniqueHiddenTables | Sort-Object -Unique)
+            if ((($expectedHiddenTables -join "|") -ne ($actualHiddenTables -join "|"))) {
+                $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.hiddenTables" -Message "semanticUx must expose exactly one visible semantic table. hiddenTables must contain every declared semantic table except primaryTable."))
+            }
+        }
     }
 
     if ($Manifest.bindingContract) {

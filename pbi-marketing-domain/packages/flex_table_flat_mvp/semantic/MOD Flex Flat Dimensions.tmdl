@@ -1,4 +1,5 @@
 table 'MOD Flex Flat Dimensions'
+	isHidden
 	lineageTag: 92ac6f5d-ed1a-4aeb-a2f0-f68b4f9a2c65
 
 	column 'Flat Dimension'

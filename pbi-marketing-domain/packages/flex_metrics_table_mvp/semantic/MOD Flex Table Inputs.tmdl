@@ -1,4 +1,5 @@
 table 'MOD Flex Table Inputs'
+	isHidden
 	lineageTag: e3d3436e-43d8-4c20-95bd-e4dd73eb61d6
 
 	measure 'Flex Input Metric 1' = [MOD_BIND_MEASURE_1]

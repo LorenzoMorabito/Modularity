@@ -303,6 +303,27 @@
       },
       "additionalProperties": false
     },
+    "semanticUx": {
+      "type": "object",
+      "required": [
+        "primaryTable",
+        "hiddenTables"
+      ],
+      "properties": {
+        "primaryTable": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hiddenTables": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "provides": {
       "type": "object",
       "properties": {

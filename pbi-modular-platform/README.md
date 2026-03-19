@@ -67,6 +67,7 @@ Design evolutivi documentati:
 
 - [docs/lifecycle.md](./docs/lifecycle.md)
 - [docs/interactive-binding-design.md](./docs/interactive-binding-design.md)
+- [docs/package-semantic-standard.md](./docs/package-semantic-standard.md)
 
 ## Posizionamento nella repo
 

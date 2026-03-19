@@ -1,4 +1,5 @@
 table 'MOD Flex Table Axis'
+	isHidden
 	lineageTag: 0ea3b2f7-1e8d-4a0f-92fe-5b95f134b925
 
 	column DimensionKey

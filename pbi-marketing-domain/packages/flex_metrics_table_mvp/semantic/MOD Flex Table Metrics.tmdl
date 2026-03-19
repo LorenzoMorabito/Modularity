@@ -57,6 +57,7 @@ table 'MOD Flex Table Metrics'
 			    BLANK()
 			)
 		formatString: #,0.00
+		displayFolder: Outputs
 		lineageTag: 3ad9ece3-2136-42e7-b713-8e3df6e2471a
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
@@ -82,6 +83,7 @@ table 'MOD Flex Table Metrics'
 			RETURN
 			IF(NonBlankMeasureCount > 0, 1)
 		formatString: 0
+		displayFolder: Diagnostics
 		lineageTag: 82c527ac-c700-4f50-9f8a-fba2ab2bcc95
 
 	measure 'Flex Table Title' =
@@ -96,6 +98,7 @@ table 'MOD Flex Table Metrics'
 			    )
 			RETURN
 			"Flexible Metrics Pivot | " & COALESCE(SelectedDimensions, "{{bindingLabel:MOD_BIND_DIMENSION_1[Value]}}")
+		displayFolder: Presentation
 		lineageTag: f7b9e2a3-fc89-4533-ae54-ef56c48fc917
 
 	column Column

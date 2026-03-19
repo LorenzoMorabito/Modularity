@@ -1,4 +1,5 @@
 table 'MOD Flex Table Measure Selector'
+	isHidden
 	lineageTag: e96317e4-8ed8-4ad2-a8c1-b6bd06fc4e0f
 
 	column MeasureKey

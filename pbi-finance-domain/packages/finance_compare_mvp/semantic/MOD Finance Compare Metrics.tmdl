@@ -1,6 +1,7 @@
 table 'MOD Finance Compare Metrics'
 
 	measure 'Selected Reference Value' = [Metric Compare (Selected)]
+		displayFolder: Compare
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
@@ -8,6 +9,7 @@ table 'MOD Finance Compare Metrics'
 			
 			VAR comp = [Metric Compare (Selected)]
 			RETURN IF( ISBLANK(comp), BLANK(), [Input Primary Measure] - comp )
+		displayFolder: Compare
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
@@ -16,6 +18,7 @@ table 'MOD Finance Compare Metrics'
 			VAR comp = [Metric Compare (Selected)]
 			RETURN IF( ISBLANK(comp), BLANK(), DIVIDE([Input Primary Measure] - comp, comp) )
 		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Compare
 
 	column Column
 		isHidden

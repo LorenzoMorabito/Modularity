@@ -82,6 +82,15 @@ $manifest = [ordered]@{
         coreMeasures = @()
         coreColumns  = @()
     }
+    semanticUx     = if ($Type -eq "semantic") {
+        [ordered]@{
+            primaryTable = $semanticTables[0]
+            hiddenTables = @()
+        }
+    }
+    else {
+        $null
+    }
     provides       = [ordered]@{
         semanticTables = @($semanticTables)
     }

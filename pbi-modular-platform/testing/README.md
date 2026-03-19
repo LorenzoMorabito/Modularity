@@ -62,6 +62,7 @@
   -ProjectPath ./powerbi-projects/20260227_Product_Analysis_Core.pbip `
   -Domain finance `
   -ModuleId finance_compare_mvp `
+  -MappingFile ./temp/finance-mapping.json `
   -FailOnError
 ```
 
@@ -74,5 +75,9 @@
 ## Note operative
 
 - `smoke-install` clona il target in un sandbox temporaneo, reinstalla il modulo e valida il risultato
+- per i moduli con `bindingContract`, passare `-MappingFile` quando il progetto non puo essere risolto in modo univoco dai default
 - il framework e statico/sandbox: non automatizza un ciclo completo di apertura/render di Power BI Desktop
 - oggi i 4 progetti `PBIP` versionati passano `test-project`
+
+
+

@@ -1,4 +1,5 @@
 table 'MOD Finance Compare Selector'
+	isHidden
 
 	measure 'Metric Compare (Selected)' =
 			

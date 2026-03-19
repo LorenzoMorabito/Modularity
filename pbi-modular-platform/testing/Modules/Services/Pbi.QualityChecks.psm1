@@ -10,6 +10,7 @@ function Get-PbiQualityRuleCatalog {
         [PSCustomObject]@{ Scope = "Module"; RuleId = "semantic.local-path.forbidden"; Description = "Semantic assets do not contain hardcoded local absolute paths."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "semantic.binding-token.unresolved"; Description = "Semantic assets do not contain unresolved framework binding tokens."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "semantic.tmdl.literal-escape.forbidden"; Description = "Static semantic TMDL assets do not contain literal PowerShell escape sequences."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "semantic.table-visibility.standard"; Description = "semanticUx keeps exactly one visible facade table and marks technical tables hidden in both source and rendered TMDL assets."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "semantic.tmdl.render.succeeds"; Description = "Dynamic semantic assets can be rendered for validation without throwing errors."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "semantic.tmdl.rendered.literal-escape.forbidden"; Description = "Rendered semantic TMDL assets do not contain literal PowerShell escape sequences that break Desktop parsing."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "report.json.parse"; Description = "All report asset JSON files parse correctly."; Severity = "Error" },
@@ -181,6 +182,7 @@ function Invoke-PbiSmokeInstallCheck {
         [Parameter(Mandatory = $true)][string]$ProjectPath,
         [string]$Domain,
         [Parameter(Mandatory = $true)][string]$ModuleId,
+        [string]$MappingFile,
         [string]$TempRoot,
         [switch]$KeepTempCopy
     )
@@ -194,7 +196,7 @@ function Invoke-PbiSmokeInstallCheck {
         $tempState = Get-PbiInstalledModulesState -Project $tempProject
         $tempRecord = Get-PbiInstalledModuleRecord -State $tempState -ModuleId $module.ModuleId
         Reset-PbiModuleInstallationInProject -Project $tempProject -ModuleId $module.ModuleId -StateRecord $tempRecord -Module $module
-        $installResult = Install-PbiModulePackage -WorkspaceRoot $resolvedWorkspaceRoot -ProjectPath $tempProject.PbipPath -Domain $module.Domain -ModuleId $module.ModuleId -ActivateInstalledPage
+        $installResult = Install-PbiModulePackage -WorkspaceRoot $resolvedWorkspaceRoot -ProjectPath $tempProject.PbipPath -Domain $module.Domain -ModuleId $module.ModuleId -MappingFile $MappingFile -ActivateInstalledPage
         $projectCheck = Invoke-PbiProjectQualityChecks -ProjectPath $tempProject.PbipPath
         $results = New-Object System.Collections.Generic.List[object]
 
@@ -217,3 +219,5 @@ function Invoke-PbiSmokeInstallCheck {
 }
 
 Export-ModuleMember -Function Get-PbiQualityRuleCatalog, Invoke-PbiModuleQualityChecks, Invoke-PbiProjectQualityChecks, Invoke-PbiRepoQualityChecks, Invoke-PbiSmokeInstallCheck
+
+

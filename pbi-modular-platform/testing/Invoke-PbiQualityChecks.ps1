@@ -6,6 +6,7 @@ param(
     [string]$ProjectPath,
     [string]$Domain,
     [string]$ModuleId,
+    [string]$MappingFile,
     [string]$TempRoot,
     [switch]$KeepTempCopy,
     [switch]$FailOnError
@@ -93,7 +94,7 @@ switch ($Command) {
             throw "ModuleId is required for smoke-install."
         }
 
-        $outcome = Invoke-PbiSmokeInstallCheck -WorkspaceRoot $workspaceRoot -ProjectPath $ProjectPath -Domain $Domain -ModuleId $ModuleId -TempRoot $TempRoot -KeepTempCopy:$KeepTempCopy
+        $outcome = Invoke-PbiSmokeInstallCheck -WorkspaceRoot $workspaceRoot -ProjectPath $ProjectPath -Domain $Domain -ModuleId $ModuleId -MappingFile $MappingFile -TempRoot $TempRoot -KeepTempCopy:$KeepTempCopy
     }
 }
 
@@ -102,3 +103,5 @@ Show-PbiQualityResults -Outcome $outcome
 if ($FailOnError -and (Test-PbiQualityHasErrors -Results @($outcome.Results))) {
     exit 1
 }
+
+
