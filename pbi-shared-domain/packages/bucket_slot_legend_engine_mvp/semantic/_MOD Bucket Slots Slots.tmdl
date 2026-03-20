@@ -1,0 +1,39 @@
+table '_MOD Bucket Slots Slots'
+	isHidden
+
+	column Slot
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Slot]
+		sortByColumn: SlotOrder
+
+	column SlotOrder
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [SlotOrder]
+
+	column NIndex
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [NIndex]
+
+	partition '_MOD Bucket Slots Slots' = calculated
+		mode: import
+		source = ```
+				VAR MaxN = 20
+				RETURN
+				UNION(
+				    ROW("Slot", "TARGET", "SlotOrder", 0, "NIndex", 0),
+				    SELECTCOLUMNS(
+				        GENERATESERIES(1, MaxN, 1),
+				        "Slot", "TOP " & [Value],
+				        "SlotOrder", [Value],
+				        "NIndex", [Value]
+				    ),
+				    ROW("Slot", "OTHERS", "SlotOrder", 999, "NIndex", 999)
+				)
+				```

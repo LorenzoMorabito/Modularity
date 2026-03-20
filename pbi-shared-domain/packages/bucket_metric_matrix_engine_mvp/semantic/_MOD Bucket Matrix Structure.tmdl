@@ -1,0 +1,85 @@
+table '_MOD Bucket Matrix Structure'
+	isHidden
+
+	column GroupKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [GroupKey]
+
+	column GroupLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [GroupLabel]
+		sortByColumn: GroupOrder
+
+	column GroupOrder
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [GroupOrder]
+
+	column MetricKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricKey]
+
+	column MetricLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricLabel]
+		sortByColumn: MetricOrder
+
+	column MetricOrder
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [MetricOrder]
+
+	column ColumnKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [ColumnKey]
+
+	column ColumnLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [ColumnLabel]
+		sortByColumn: ColumnOrder
+
+	column ColumnOrder
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [ColumnOrder]
+
+	partition '_MOD Bucket Matrix Structure' = calculated
+		mode: import
+		source =
+				
+				DATATABLE(
+				    "GroupKey", STRING,
+				    "GroupLabel", STRING,
+				    "GroupOrder", INTEGER,
+				    "MetricKey", STRING,
+				    "MetricLabel", STRING,
+				    "MetricOrder", INTEGER,
+				    "ColumnKey", STRING,
+				    "ColumnLabel", STRING,
+				    "ColumnOrder", INTEGER,
+				    {
+				        {"group_1", "Primary", 1, "act",   "ACT",         1, "group_1_act",   "Primary | ACT",        101},
+				        {"group_1", "Primary", 1, "share", "MS%",         2, "group_1_share", "Primary | MS%",        102},
+				        {"group_1", "Primary", 1, "qoq",   "PPG% vs QoQ", 3, "group_1_qoq",   "Primary | PPG% QoQ",   103},
+				        {"group_1", "Primary", 1, "yoy",   "PPG% vs PY",  4, "group_1_yoy",   "Primary | PPG% PY",    104},
+				        {"group_2", "Secondary", 2, "act",   "ACT",         1, "group_2_act",   "Secondary | ACT",      201},
+				        {"group_2", "Secondary", 2, "share", "MS%",         2, "group_2_share", "Secondary | MS%",      202},
+				        {"group_2", "Secondary", 2, "qoq",   "PPG% vs QoQ", 3, "group_2_qoq",   "Secondary | PPG% QoQ", 203},
+				        {"group_2", "Secondary", 2, "yoy",   "PPG% vs PY",  4, "group_2_yoy",   "Secondary | PPG% PY",  204}
+				    }
+				)

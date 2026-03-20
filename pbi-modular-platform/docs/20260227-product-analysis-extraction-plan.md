@@ -72,6 +72,10 @@ These areas are valid package candidates but are still more intertwined at repor
    - legend slot grouping
    - bucketed LP measures
    - comparison matrix layout logic
+   Status:
+   - bucket / legend semantic engine extracted as `bucket_slot_legend_engine_mvp`
+   - matrix metric engine extracted as `bucket_metric_matrix_engine_mvp`
+   - combined report bundle still pending as a follow-up layer
 
 ## Legacy-to-Package Mapping
 
@@ -120,6 +124,42 @@ Generalization notes:
   - one response measure
   - one period axis column
 - lag tables remain technical internal assets
+
+### `bucket_slot_legend_engine_mvp`
+
+Derived from:
+
+- `Corporation Buckets`
+- `LegendCorp`
+- `LegendSlot Groupped (Menarini + TopN + Others)`
+
+Generalization notes:
+
+- the legacy implementation hardcoded a specific target corporation and mixed ranking, slot assignment, and legend aggregation in one block
+- the extracted engine keeps the reusable semantics only:
+  - selectable target entity
+  - configurable TopN size
+  - `target / topN / others` slot outputs
+  - legend classification and value aggregation
+- the target entity is no longer hardcoded and comes from the bound entity dimension
+- report matrix layout remains a separate concern for a later bundle
+
+### `bucket_metric_matrix_engine_mvp`
+
+Derived from:
+
+- `ColumnStructure`
+- `Msr Sales Buckets LP`
+- `Msr Promo Buckets LP`
+
+Generalization notes:
+
+- the legacy matrix mixed column layout metadata and dynamic measure selection in report-specific tables
+- the extracted engine keeps the reusable semantic contract:
+  - stable matrix column structure
+  - group / metric selection metadata
+  - dynamic selected value measure
+- the primary and secondary measure families are user-bound, so the package is no longer tied to sales and promo naming
 
 ## Design Rules For Extracted Packages
 

@@ -2,6 +2,26 @@
   "domain": "shared",
   "packages": [
     {
+      "moduleId": "bucket_metric_matrix_engine_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/bucket_metric_matrix_engine_mvp",
+      "displayName": "Bucket Metric Matrix Engine MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-two-measure-families"
+      ]
+    },
+    {
+      "moduleId": "bucket_slot_legend_engine_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/bucket_slot_legend_engine_mvp",
+      "displayName": "Bucket Slot Legend Engine MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-rankable-entity-dimension"
+      ]
+    },
+    {
       "moduleId": "competitive_benchmark_bundle_mvp",
       "version": "0.1.0",
       "status": "experimental",

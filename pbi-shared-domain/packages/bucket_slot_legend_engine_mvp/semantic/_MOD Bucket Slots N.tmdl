@@ -1,0 +1,12 @@
+table '_MOD Bucket Slots N'
+	isHidden
+
+	column TopN
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition '_MOD Bucket Slots N' = calculated
+		mode: import
+		source = GENERATESERIES(1, 20, 1)

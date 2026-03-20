@@ -1,0 +1,27 @@
+table '_MOD Bucket Slots Legend'
+	isHidden
+
+	column Legend
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Legend]
+
+	partition '_MOD Bucket Slots Legend' = calculated
+		mode: import
+		source = ```
+				VAR Entities =
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_ENTITY_DIMENSION[Value]),
+				            NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value])
+				        ),
+				        "Legend", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+				    )
+				RETURN
+				DISTINCT(
+				    UNION(
+				        Entities,
+				        DATATABLE("Legend", STRING, {{"OTHERS"}})
+				    )
+				)
+				```

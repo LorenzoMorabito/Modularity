@@ -1,0 +1,96 @@
+{
+  "moduleId": "bucket_slot_legend_engine_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic bucket slot and legend engine extracted from the legacy corporation bucket comparison logic.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_VALUE_MEASURE",
+      "MOD_BIND_RANKING_MEASURE"
+    ],
+    "coreColumns": [
+      "MOD_BIND_ENTITY_DIMENSION[Value]"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "entity_dimension",
+        "bindingKey": "MOD_BIND_ENTITY_DIMENSION[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Entity Dimension",
+        "description": "Dimension column used for target selection, TopN ranking, and legend aggregation.",
+        "semanticRole": "bucket.entity",
+        "defaultValue": "T_DIM_CORPORATION[Corporation]",
+        "suggestions": [
+          "Corporation",
+          "Company",
+          "Brand",
+          "Product"
+        ]
+      },
+      {
+        "id": "value_measure",
+        "bindingKey": "MOD_BIND_VALUE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Value Measure",
+        "description": "Measure aggregated for the selected target, TopN competitors, and Others bucket.",
+        "semanticRole": "bucket.value",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "Revenue",
+          "Actual"
+        ]
+      },
+      {
+        "id": "ranking_measure",
+        "bindingKey": "MOD_BIND_RANKING_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Ranking Measure",
+        "description": "Measure used to rank the entity dimension and determine the TopN set.",
+        "semanticRole": "bucket.ranking",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "Share",
+          "Ranking"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Bucket Slots Inputs",
+      "_MOD Bucket Slots Targets",
+      "_MOD Bucket Slots N",
+      "_MOD Bucket Slots Slots",
+      "_MOD Bucket Slots Legend",
+      "MOD Bucket Slots"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Bucket Slots",
+    "hiddenTables": [
+      "_MOD Bucket Slots Inputs",
+      "_MOD Bucket Slots Targets",
+      "_MOD Bucket Slots N",
+      "_MOD Bucket Slots Slots",
+      "_MOD Bucket Slots Legend"
+    ]
+  }
+}

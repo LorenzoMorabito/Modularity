@@ -1,0 +1,17 @@
+table '_MOD Bucket Slots Inputs'
+	isHidden
+
+	measure 'Bucket Slots Input Value Measure' = [MOD_BIND_VALUE_MEASURE]
+
+	measure 'Bucket Slots Input Ranking Measure' = [MOD_BIND_RANKING_MEASURE]
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition '_MOD Bucket Slots Inputs' = calculated
+		mode: import
+		source = Row("Column", BLANK())

@@ -1,0 +1,52 @@
+table 'MOD Bucket Matrix'
+
+	measure 'Bucket Matrix Selected Group Key' = SELECTEDVALUE('_MOD Bucket Matrix Structure'[GroupKey], "group_1")
+		displayFolder: Selection
+
+	measure 'Bucket Matrix Selected Group Label' = SELECTEDVALUE('_MOD Bucket Matrix Structure'[GroupLabel], "Primary")
+		displayFolder: Selection
+
+	measure 'Bucket Matrix Selected Metric Key' = SELECTEDVALUE('_MOD Bucket Matrix Structure'[MetricKey], "act")
+		displayFolder: Selection
+
+	measure 'Bucket Matrix Selected Metric Label' = SELECTEDVALUE('_MOD Bucket Matrix Structure'[MetricLabel], "ACT")
+		displayFolder: Selection
+
+	measure 'Bucket Matrix Selected Column Key' = SELECTEDVALUE('_MOD Bucket Matrix Structure'[ColumnKey], "group_1_act")
+		displayFolder: Selection
+
+	measure 'Bucket Matrix Value' =
+			
+			SWITCH(
+			    TRUE(),
+			    [Bucket Matrix Selected Group Key] = "group_1" && [Bucket Matrix Selected Metric Key] = "act",   [MOD_BIND_GROUP_1_ACT_MEASURE],
+			    [Bucket Matrix Selected Group Key] = "group_1" && [Bucket Matrix Selected Metric Key] = "share", [MOD_BIND_GROUP_1_SHARE_MEASURE],
+			    [Bucket Matrix Selected Group Key] = "group_1" && [Bucket Matrix Selected Metric Key] = "qoq",   [MOD_BIND_GROUP_1_QOQ_MEASURE],
+			    [Bucket Matrix Selected Group Key] = "group_1" && [Bucket Matrix Selected Metric Key] = "yoy",   [MOD_BIND_GROUP_1_YOY_MEASURE],
+			    [Bucket Matrix Selected Group Key] = "group_2" && [Bucket Matrix Selected Metric Key] = "act",   [MOD_BIND_GROUP_2_ACT_MEASURE],
+			    [Bucket Matrix Selected Group Key] = "group_2" && [Bucket Matrix Selected Metric Key] = "share", [MOD_BIND_GROUP_2_SHARE_MEASURE],
+			    [Bucket Matrix Selected Group Key] = "group_2" && [Bucket Matrix Selected Metric Key] = "qoq",   [MOD_BIND_GROUP_2_QOQ_MEASURE],
+			    [Bucket Matrix Selected Group Key] = "group_2" && [Bucket Matrix Selected Metric Key] = "yoy",   [MOD_BIND_GROUP_2_YOY_MEASURE],
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Matrix Title' =
+			
+			[Bucket Matrix Selected Group Label] & " | " & [Bucket Matrix Selected Metric Label]
+		displayFolder: Presentation
+
+	measure 'Bucket Matrix Column Count' = COUNTROWS(ALL('_MOD Bucket Matrix Structure'[ColumnKey]))
+		formatString: 0
+		displayFolder: Diagnostics
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Bucket Matrix' = calculated
+		mode: import
+		source = Row("Column", BLANK())

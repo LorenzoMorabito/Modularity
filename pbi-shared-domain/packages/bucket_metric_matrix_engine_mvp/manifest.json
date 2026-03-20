@@ -1,0 +1,164 @@
+{
+  "moduleId": "bucket_metric_matrix_engine_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic bucket metric matrix engine extracted from the legacy dynamic overview column structure and measure-switch logic.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_GROUP_1_ACT_MEASURE",
+      "MOD_BIND_GROUP_1_SHARE_MEASURE",
+      "MOD_BIND_GROUP_1_QOQ_MEASURE",
+      "MOD_BIND_GROUP_1_YOY_MEASURE",
+      "MOD_BIND_GROUP_2_ACT_MEASURE",
+      "MOD_BIND_GROUP_2_SHARE_MEASURE",
+      "MOD_BIND_GROUP_2_QOQ_MEASURE",
+      "MOD_BIND_GROUP_2_YOY_MEASURE"
+    ],
+    "coreColumns": []
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "group_1_act_measure",
+        "bindingKey": "MOD_BIND_GROUP_1_ACT_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Group ACT Measure",
+        "description": "Current-value measure for the primary metric family.",
+        "semanticRole": "bucket.matrix.primary.act",
+        "defaultValue": "Sales Measure (Bucket, LP)",
+        "suggestions": [
+          "Sales Measure (Bucket, LP)",
+          "ACT",
+          "Current Value"
+        ]
+      },
+      {
+        "id": "group_1_share_measure",
+        "bindingKey": "MOD_BIND_GROUP_1_SHARE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Group Share Measure",
+        "description": "Share or mix measure for the primary metric family.",
+        "semanticRole": "bucket.matrix.primary.share",
+        "defaultValue": "Sales MS% (Bucket, LP)",
+        "suggestions": [
+          "Sales MS% (Bucket, LP)",
+          "MS%",
+          "Share"
+        ]
+      },
+      {
+        "id": "group_1_qoq_measure",
+        "bindingKey": "MOD_BIND_GROUP_1_QOQ_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Group QoQ Measure",
+        "description": "Quarter-over-quarter delta percent for the primary metric family.",
+        "semanticRole": "bucket.matrix.primary.qoq",
+        "defaultValue": "Sales QoQ% (Bucket, LP)",
+        "suggestions": [
+          "Sales QoQ% (Bucket, LP)",
+          "QoQ%",
+          "PPG% vs QoQ"
+        ]
+      },
+      {
+        "id": "group_1_yoy_measure",
+        "bindingKey": "MOD_BIND_GROUP_1_YOY_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Group YoY Measure",
+        "description": "Year-over-year delta percent for the primary metric family.",
+        "semanticRole": "bucket.matrix.primary.yoy",
+        "defaultValue": "Sales YoY% (Bucket, LP)",
+        "suggestions": [
+          "Sales YoY% (Bucket, LP)",
+          "YoY%",
+          "PPG% vs PY"
+        ]
+      },
+      {
+        "id": "group_2_act_measure",
+        "bindingKey": "MOD_BIND_GROUP_2_ACT_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Group ACT Measure",
+        "description": "Current-value measure for the secondary metric family.",
+        "semanticRole": "bucket.matrix.secondary.act",
+        "defaultValue": "Promo Measure (Bucket, LP)",
+        "suggestions": [
+          "Promo Measure (Bucket, LP)",
+          "ACT",
+          "Current Value"
+        ]
+      },
+      {
+        "id": "group_2_share_measure",
+        "bindingKey": "MOD_BIND_GROUP_2_SHARE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Group Share Measure",
+        "description": "Share or mix measure for the secondary metric family.",
+        "semanticRole": "bucket.matrix.secondary.share",
+        "defaultValue": "Promo MS% (Bucket, LP)",
+        "suggestions": [
+          "Promo MS% (Bucket, LP)",
+          "MS%",
+          "Share"
+        ]
+      },
+      {
+        "id": "group_2_qoq_measure",
+        "bindingKey": "MOD_BIND_GROUP_2_QOQ_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Group QoQ Measure",
+        "description": "Quarter-over-quarter delta percent for the secondary metric family.",
+        "semanticRole": "bucket.matrix.secondary.qoq",
+        "defaultValue": "Promo QoQ% (Bucket, LP)",
+        "suggestions": [
+          "Promo QoQ% (Bucket, LP)",
+          "QoQ%",
+          "PPG% vs QoQ"
+        ]
+      },
+      {
+        "id": "group_2_yoy_measure",
+        "bindingKey": "MOD_BIND_GROUP_2_YOY_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Group YoY Measure",
+        "description": "Year-over-year delta percent for the secondary metric family.",
+        "semanticRole": "bucket.matrix.secondary.yoy",
+        "defaultValue": "Promo YoY% (Bucket, LP)",
+        "suggestions": [
+          "Promo YoY% (Bucket, LP)",
+          "YoY%",
+          "PPG% vs PY"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Bucket Matrix Structure",
+      "MOD Bucket Matrix"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Bucket Matrix",
+    "hiddenTables": [
+      "_MOD Bucket Matrix Structure"
+    ]
+  }
+}

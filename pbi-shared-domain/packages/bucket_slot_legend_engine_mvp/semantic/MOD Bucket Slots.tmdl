@@ -1,0 +1,322 @@
+table 'MOD Bucket Slots'
+
+	measure 'Bucket Slots Selected N' = SELECTEDVALUE('_MOD Bucket Slots N'[TopN], 5)
+		formatString: 0
+		displayFolder: Selection
+
+	measure 'Bucket Slots Selected Target Entity' =
+			
+			VAR TargetEntity = SELECTEDVALUE('_MOD Bucket Slots Targets'[TargetEntity])
+			RETURN
+			IF(TargetEntity = "(No target)", BLANK(), TargetEntity)
+		displayFolder: Selection
+
+	measure 'Bucket Slots Selected Value Measure' = '_MOD Bucket Slots Inputs'[Bucket Slots Input Value Measure]
+		displayFolder: Selection
+
+	measure 'Bucket Slots Selected Ranking Measure' = '_MOD Bucket Slots Inputs'[Bucket Slots Input Ranking Measure]
+		displayFolder: Selection
+
+	measure 'Bucket Slots Current Entity' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Slots Slots'[Slot])
+			VAR SlotIndex = SELECTEDVALUE('_MOD Bucket Slots Slots'[NIndex])
+			VAR TargetEntity = [Bucket Slots Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Slots Inputs'[Bucket Slots Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR AvailableEntities = COUNTROWS(RankedEntities)
+			VAR EffectiveN = MIN([Bucket Slots Selected N], AvailableEntities)
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR HasNth =
+			    NOT ISBLANK(SlotIndex) &&
+			    SlotIndex >= 1 &&
+			    SlotIndex <= EffectiveN
+			VAR NthEntity =
+			    IF(
+			        HasNth,
+			        MAXX(
+			            TOPN(
+			                1,
+			                TOPN(
+			                    SlotIndex,
+			                    TopEntities,
+			                    [__ranking_value], DESC,
+			                    MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			                ),
+			                [__ranking_value], ASC,
+			                MOD_BIND_ENTITY_DIMENSION[Value], DESC
+			            ),
+			            MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			        )
+			    )
+			VAR HasOthers = AvailableEntities > EffectiveN
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET", TargetEntity,
+			    Slot = "OTHERS", IF(HasOthers, "OTHERS", BLANK()),
+			    LEFT(Slot, 3) = "TOP" && HasNth, NthEntity,
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Slots Rank' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Slots Slots'[Slot])
+			VAR SlotIndex = SELECTEDVALUE('_MOD Bucket Slots Slots'[NIndex])
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET", 0,
+			    LEFT(Slot, 3) = "TOP", SlotIndex,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Outputs
+
+	measure 'Bucket Slots Value' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Slots Slots'[Slot])
+			VAR CurrentEntity = [Bucket Slots Current Entity]
+			VAR TargetEntity = [Bucket Slots Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Slots Inputs'[Bucket Slots Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Slots Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Slots Inputs'[Bucket Slots Input Value Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Slots Inputs'[Bucket Slots Input Value Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Slots Inputs'[Bucket Slots Input Value Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Slots Show Row' =
+			
+			IF(
+			    NOT ISBLANK([Bucket Slots Current Entity]) ||
+			    NOT ISBLANK([Bucket Slots Value]),
+			    1,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Bucket Slots Legend Selected Entity' = SELECTEDVALUE('_MOD Bucket Slots Legend'[Legend])
+		displayFolder: Outputs
+
+	measure 'Bucket Slots Legend Role' =
+			
+			VAR LegendEntity = [Bucket Slots Legend Selected Entity]
+			VAR TargetEntity = [Bucket Slots Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Slots Inputs'[Bucket Slots Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Slots Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISBLANK(LegendEntity), BLANK(),
+			    LegendEntity = "OTHERS" && COUNTROWS(OthersEntities) > 0, "Others",
+			    NOT ISBLANK(TargetEntity) && LegendEntity = TargetEntity, "Target",
+			    CONTAINS(TopEntityNames, [EntityText], LegendEntity), "TopN",
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Slots Legend Value' =
+			
+			VAR LegendEntity = [Bucket Slots Legend Selected Entity]
+			VAR LegendRole = [Bucket Slots Legend Role]
+			VAR TargetEntity = [Bucket Slots Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Slots Inputs'[Bucket Slots Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Slots Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    LegendRole = "Target" || LegendRole = "TopN",
+			        CALCULATE(
+			            '_MOD Bucket Slots Inputs'[Bucket Slots Input Value Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = LegendEntity
+			            )
+			        ),
+			    LegendRole = "Others",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Slots Inputs'[Bucket Slots Input Value Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Slots Legend Show Item' =
+			
+			IF(
+			    NOT ISBLANK([Bucket Slots Legend Role]) &&
+			    NOT ISBLANK([Bucket Slots Legend Value]),
+			    1,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Bucket Slots Title' =
+			
+			"Top " & FORMAT([Bucket Slots Selected N], "0") &
+			IF(
+			    NOT ISBLANK([Bucket Slots Selected Target Entity]),
+			    " + target " & [Bucket Slots Selected Target Entity],
+			    ""
+			)
+		displayFolder: Presentation
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Bucket Slots' = calculated
+		mode: import
+		source = Row("Column", BLANK())
