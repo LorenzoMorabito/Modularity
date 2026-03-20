@@ -848,40 +848,63 @@ function New-PbiTopNDriverInputsTemplate {
 function New-PbiTopNDriverGrainSelectorTemplate {
     param([Parameter(Mandatory = $true)]$DimensionItems)
 
-    $rows = New-Object System.Collections.Generic.List[string]
+    $lines = New-Object System.Collections.Generic.List[string]
+    $parameterRows = New-Object System.Collections.Generic.List[string]
+
     for ($index = 0; $index -lt $DimensionItems.Count; $index++) {
         $item = $DimensionItems[$index]
         $dimensionOrdinal = $index + 1
-        $rows.Add(('{{"dimension_{0}", "{1}", {2}}}' -f $dimensionOrdinal, (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)), $dimensionOrdinal))
+        $dimensionKey = ("dimension_{0}" -f $dimensionOrdinal)
+        $dimensionLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)
+        $parameterRows.Add(('				    ("{0}", NAMEOF({1}), {2}, "{3}")' -f $dimensionLabel, [string]$item.bindingKey, ($dimensionOrdinal - 1), $dimensionKey))
     }
 
-    $partitionSource = ('DATATABLE("GrainKey", STRING, "GrainLabel", STRING, "GrainSort", INTEGER, {{ {0} }})' -f ($rows -join ", "))
-
-    $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add("table '_MOD TopN Driver Grains'")
     $lines.Add("`tisHidden")
     $lines.Add("")
-    $lines.Add("`tcolumn GrainKey")
-    $lines.Add("`t`tisHidden")
-    $lines.Add("`t`tsummarizeBy: none")
-    $lines.Add("`t`tisNameInferred")
-    $lines.Add("`t`tsourceColumn: [GrainKey]")
-    $lines.Add("")
     $lines.Add("`tcolumn GrainLabel")
     $lines.Add("`t`tsummarizeBy: none")
-    $lines.Add("`t`tsourceColumn: [GrainLabel]")
+    $lines.Add("`t`tsourceColumn: [Value1]")
     $lines.Add("`t`tsortByColumn: GrainSort")
+    $lines.Add("")
+    $lines.Add("`t`trelatedColumnDetails")
+    $lines.Add("`t`t`tgroupByColumn: GrainFields")
+    $lines.Add("")
+    $lines.Add("`t`tannotation SummarizationSetBy = Automatic")
+    $lines.Add("")
+    $lines.Add("`tcolumn GrainFields")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tsourceColumn: [Value2]")
+    $lines.Add("`t`tsortByColumn: GrainSort")
+    $lines.Add("")
+    $lines.Add("`t`textendedProperty ParameterMetadata =")
+    $lines.Add("`t`t`t`t{")
+    $lines.Add("`t`t`t`t  ""version"": 3,")
+    $lines.Add("`t`t`t`t  ""kind"": 2")
+    $lines.Add("`t`t`t`t}")
+    $lines.Add("")
+    $lines.Add("`t`tannotation SummarizationSetBy = Automatic")
     $lines.Add("")
     $lines.Add("`tcolumn GrainSort")
     $lines.Add("`t`tisHidden")
     $lines.Add("`t`tformatString: 0")
-    $lines.Add("`t`tsummarizeBy: sum")
-    $lines.Add("`t`tisNameInferred")
-    $lines.Add("`t`tsourceColumn: [GrainSort]")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tsourceColumn: [Value3]")
+    $lines.Add("")
+    $lines.Add("`t`tannotation SummarizationSetBy = Automatic")
+    $lines.Add("")
+    $lines.Add("`tcolumn GrainKey")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tsourceColumn: [Value4]")
     $lines.Add("")
     $lines.Add("`tpartition '_MOD TopN Driver Grains' = calculated")
     $lines.Add("`t`tmode: import")
-    $lines.Add(("`t`tsource = {0}" -f $partitionSource))
+    $lines.Add("`t`tsource =")
+    $lines.Add("`t`t`t`t{")
+    $lines.Add(($parameterRows -join ",`r`n"))
+    $lines.Add("`t`t`t`t}")
 
     return ($lines -join "`r`n")
 }

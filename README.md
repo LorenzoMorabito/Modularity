@@ -23,13 +23,17 @@ Package attualmente catalogati:
   - `flex_metrics_table_mvp` `0.2.1`
   - `flex_table_flat_mvp` `0.2.0`
 - shared:
+  - `bucketed_overview_matrix_bundle_mvp` `0.1.0`
+  - `bucket_metric_family_bundle_mvp` `0.1.0`
   - `bucket_metric_matrix_engine_mvp` `0.1.0`
   - `bucket_slot_legend_engine_mvp` `0.1.0`
   - `competitive_benchmark_bundle_mvp` `0.1.0`
   - `period_compare_switch_mvp` `0.1.0`
   - `metric_switch_selector_mvp` `0.1.0`
   - `lag_correlation_explorer_mvp` `0.1.0`
-  - `topn_target_driver_bundle_mvp` `0.1.0`
+  - `spend_bucket_pareto_mvp` `0.1.0`
+  - `kpi_delta_signal_mvp` `0.1.0`
+  - `topn_target_driver_bundle_mvp` `0.2.0`
 
 Capabilita oggi operative della platform:
 

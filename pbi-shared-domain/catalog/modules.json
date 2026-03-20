@@ -2,6 +2,26 @@
   "domain": "shared",
   "packages": [
     {
+      "moduleId": "bucketed_overview_matrix_bundle_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/bucketed_overview_matrix_bundle_mvp",
+      "displayName": "Bucketed Overview Matrix Bundle MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-entity-ranking-and-dual-period-family-measures"
+      ]
+    },
+    {
+      "moduleId": "bucket_metric_family_bundle_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/bucket_metric_family_bundle_mvp",
+      "displayName": "Bucket Metric Family Bundle MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-entity-ranking-and-period-family-measures"
+      ]
+    },
+    {
       "moduleId": "bucket_metric_matrix_engine_mvp",
       "version": "0.1.0",
       "status": "experimental",
@@ -62,8 +82,28 @@
       ]
     },
     {
-      "moduleId": "topn_target_driver_bundle_mvp",
+      "moduleId": "spend_bucket_pareto_mvp",
       "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/spend_bucket_pareto_mvp",
+      "displayName": "Spend Bucket Pareto MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-rankable-entity-and-spend-measure"
+      ]
+    },
+    {
+      "moduleId": "kpi_delta_signal_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/kpi_delta_signal_mvp",
+      "displayName": "KPI Delta Signal MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-percent-delta-measure"
+      ]
+    },
+    {
+      "moduleId": "topn_target_driver_bundle_mvp",
+      "version": "0.2.0",
       "status": "experimental",
       "path": "packages/topn_target_driver_bundle_mvp",
       "displayName": "TopN Target Driver Bundle MVP",

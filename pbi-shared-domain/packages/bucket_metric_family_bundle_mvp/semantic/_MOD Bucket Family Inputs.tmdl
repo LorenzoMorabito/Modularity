@@ -1,0 +1,25 @@
+table '_MOD Bucket Family Inputs'
+	isHidden
+
+	measure 'Bucket Family Input Ranking Measure' = [MOD_BIND_RANKING_MEASURE]
+
+	measure 'Bucket Family Input Current Measure' = [MOD_BIND_CURRENT_MEASURE]
+
+	measure 'Bucket Family Input Previous Quarter Measure' = [MOD_BIND_PREVIOUS_QUARTER_MEASURE]
+
+	measure 'Bucket Family Input Previous Year Measure' = [MOD_BIND_PREVIOUS_YEAR_MEASURE]
+
+	measure 'Bucket Family Input Current Total Measure' = [MOD_BIND_CURRENT_TOTAL_MEASURE]
+
+	measure 'Bucket Family Input Previous Year Total Measure' = [MOD_BIND_PREVIOUS_YEAR_TOTAL_MEASURE]
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition '_MOD Bucket Family Inputs' = calculated
+		mode: import
+		source = Row("Column", BLANK())

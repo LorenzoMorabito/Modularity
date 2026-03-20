@@ -1,0 +1,829 @@
+table 'MOD Bucket Overview'
+
+	measure 'Bucket Overview Selected N' = SELECTEDVALUE('_MOD Bucket Overview N'[TopN], 5)
+		formatString: 0
+		displayFolder: Selection
+
+	measure 'Bucket Overview Selected Target Entity' =
+			
+			VAR TargetEntity = SELECTEDVALUE('_MOD Bucket Overview Targets'[TargetEntity])
+			RETURN
+			IF(TargetEntity = "(No target)", BLANK(), TargetEntity)
+		displayFolder: Selection
+
+	measure 'Bucket Overview Selected Group Key' = SELECTEDVALUE('_MOD Bucket Overview Structure'[GroupKey], "primary")
+		displayFolder: Selection
+
+	measure 'Bucket Overview Selected Group Label' = SELECTEDVALUE('_MOD Bucket Overview Structure'[GroupLabel], "Primary")
+		displayFolder: Selection
+
+	measure 'Bucket Overview Selected Metric Key' = SELECTEDVALUE('_MOD Bucket Overview Structure'[MetricKey], "current")
+		displayFolder: Selection
+
+	measure 'Bucket Overview Selected Metric Label' = SELECTEDVALUE('_MOD Bucket Overview Structure'[MetricLabel], "ACT")
+		displayFolder: Selection
+
+	measure 'Bucket Overview Selected Column Key' = SELECTEDVALUE('_MOD Bucket Overview Structure'[ColumnKey], "primary_current")
+		displayFolder: Selection
+
+	measure 'Bucket Overview Current Entity' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR SlotIndex = SELECTEDVALUE('_MOD Bucket Overview Slots'[NIndex])
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR AvailableEntities = COUNTROWS(RankedEntities)
+			VAR EffectiveN = MIN([Bucket Overview Selected N], AvailableEntities)
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR HasNth =
+			    NOT ISBLANK(SlotIndex) &&
+			    SlotIndex >= 1 &&
+			    SlotIndex <= EffectiveN
+			VAR NthEntity =
+			    IF(
+			        HasNth,
+			        MAXX(
+			            TOPN(
+			                1,
+			                TOPN(
+			                    SlotIndex,
+			                    TopEntities,
+			                    [__ranking_value], DESC,
+			                    MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			                ),
+			                [__ranking_value], ASC,
+			                MOD_BIND_ENTITY_DIMENSION[Value], DESC
+			            ),
+			            MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			        )
+			    )
+			VAR HasOthers = AvailableEntities > EffectiveN
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET", TargetEntity,
+			    Slot = "OTHERS", IF(HasOthers, "OTHERS", BLANK()),
+			    LEFT(Slot, 3) = "TOP" && HasNth, NthEntity,
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Rank' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR SlotIndex = SELECTEDVALUE('_MOD Bucket Overview Slots'[NIndex])
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET", 0,
+			    LEFT(Slot, 3) = "TOP", SlotIndex,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary Current' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR CurrentEntity = [Bucket Overview Current Entity]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Current Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary Previous Quarter' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR CurrentEntity = [Bucket Overview Current Entity]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Previous Quarter Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Previous Quarter Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Previous Quarter Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary Previous Year' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR CurrentEntity = [Bucket Overview Current Entity]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Previous Year Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Previous Year Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Previous Year Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary Current Total' = '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Current Total Measure]
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary Previous Year Total' = '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Previous Year Total Measure]
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary Share' = DIVIDE([Bucket Overview Primary Current], [Bucket Overview Primary Current Total])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary Share PY' = DIVIDE([Bucket Overview Primary Previous Year], [Bucket Overview Primary Previous Year Total])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary QoQ%' = DIVIDE([Bucket Overview Primary Current] - [Bucket Overview Primary Previous Quarter], [Bucket Overview Primary Previous Quarter])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary YoY%' = DIVIDE([Bucket Overview Primary Current] - [Bucket Overview Primary Previous Year], [Bucket Overview Primary Previous Year])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Primary EI' =
+			
+			VAR SharePY = [Bucket Overview Primary Share PY]
+			RETURN
+			IF(ISBLANK(SharePY), BLANK(), DIVIDE([Bucket Overview Primary Share], SharePY) * 100)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary Current' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR CurrentEntity = [Bucket Overview Current Entity]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Current Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary Previous Quarter' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR CurrentEntity = [Bucket Overview Current Entity]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Previous Quarter Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Previous Quarter Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Previous Quarter Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary Previous Year' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Overview Slots'[Slot])
+			VAR CurrentEntity = [Bucket Overview Current Entity]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Previous Year Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Previous Year Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Previous Year Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary Current Total' = '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Current Total Measure]
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary Previous Year Total' = '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Previous Year Total Measure]
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary Share' = DIVIDE([Bucket Overview Secondary Current], [Bucket Overview Secondary Current Total])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary Share PY' = DIVIDE([Bucket Overview Secondary Previous Year], [Bucket Overview Secondary Previous Year Total])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary QoQ%' = DIVIDE([Bucket Overview Secondary Current] - [Bucket Overview Secondary Previous Quarter], [Bucket Overview Secondary Previous Quarter])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary YoY%' = DIVIDE([Bucket Overview Secondary Current] - [Bucket Overview Secondary Previous Year], [Bucket Overview Secondary Previous Year])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Secondary EI' =
+			
+			VAR SharePY = [Bucket Overview Secondary Share PY]
+			RETURN
+			IF(ISBLANK(SharePY), BLANK(), DIVIDE([Bucket Overview Secondary Share], SharePY) * 100)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Matrix Value' =
+			
+			SWITCH(
+			    TRUE(),
+			    [Bucket Overview Selected Group Key] = "primary" && [Bucket Overview Selected Metric Key] = "current", [Bucket Overview Primary Current],
+			    [Bucket Overview Selected Group Key] = "primary" && [Bucket Overview Selected Metric Key] = "share",   [Bucket Overview Primary Share],
+			    [Bucket Overview Selected Group Key] = "primary" && [Bucket Overview Selected Metric Key] = "qoq",     [Bucket Overview Primary QoQ%],
+			    [Bucket Overview Selected Group Key] = "primary" && [Bucket Overview Selected Metric Key] = "yoy",     [Bucket Overview Primary YoY%],
+			    [Bucket Overview Selected Group Key] = "primary" && [Bucket Overview Selected Metric Key] = "ei",      [Bucket Overview Primary EI],
+			    [Bucket Overview Selected Group Key] = "secondary" && [Bucket Overview Selected Metric Key] = "current", [Bucket Overview Secondary Current],
+			    [Bucket Overview Selected Group Key] = "secondary" && [Bucket Overview Selected Metric Key] = "share",   [Bucket Overview Secondary Share],
+			    [Bucket Overview Selected Group Key] = "secondary" && [Bucket Overview Selected Metric Key] = "qoq",     [Bucket Overview Secondary QoQ%],
+			    [Bucket Overview Selected Group Key] = "secondary" && [Bucket Overview Selected Metric Key] = "yoy",     [Bucket Overview Secondary YoY%],
+			    [Bucket Overview Selected Group Key] = "secondary" && [Bucket Overview Selected Metric Key] = "ei",      [Bucket Overview Secondary EI],
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Legend Selected Entity' = SELECTEDVALUE('_MOD Bucket Overview Legend'[Legend])
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Legend Role' =
+			
+			VAR LegendEntity = [Bucket Overview Legend Selected Entity]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISBLANK(LegendEntity), BLANK(),
+			    LegendEntity = "OTHERS" && COUNTROWS(OthersEntities) > 0, "Others",
+			    NOT ISBLANK(TargetEntity) && LegendEntity = TargetEntity, "Target",
+			    CONTAINS(TopEntityNames, [EntityText], LegendEntity), "TopN",
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Legend Primary Value' =
+			
+			VAR LegendEntity = [Bucket Overview Legend Selected Entity]
+			VAR LegendRole = [Bucket Overview Legend Role]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    LegendRole = "Target" || LegendRole = "TopN",
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = LegendEntity
+			            )
+			        ),
+			    LegendRole = "Others",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Primary Current Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Legend Secondary Value' =
+			
+			VAR LegendEntity = [Bucket Overview Legend Selected Entity]
+			VAR LegendRole = [Bucket Overview Legend Role]
+			VAR TargetEntity = [Bucket Overview Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Overview Inputs'[Bucket Overview Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Overview Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    LegendRole = "Target" || LegendRole = "TopN",
+			        CALCULATE(
+			            '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = LegendEntity
+			            )
+			        ),
+			    LegendRole = "Others",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Overview Inputs'[Bucket Overview Input Secondary Current Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Overview Show Row' =
+			
+			IF(
+			    NOT ISBLANK([Bucket Overview Current Entity]) ||
+			    NOT ISBLANK([Bucket Overview Primary Current]) ||
+			    NOT ISBLANK([Bucket Overview Secondary Current]),
+			    1,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Bucket Overview Legend Show Item' =
+			
+			IF(
+			    NOT ISBLANK([Bucket Overview Legend Role]) &&
+			    (
+			        NOT ISBLANK([Bucket Overview Legend Primary Value]) ||
+			        NOT ISBLANK([Bucket Overview Legend Secondary Value])
+			    ),
+			    1,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Bucket Overview Title' =
+			
+			"Top " & FORMAT([Bucket Overview Selected N], "0") &
+			IF(
+			    NOT ISBLANK([Bucket Overview Selected Target Entity]),
+			    " + target " & [Bucket Overview Selected Target Entity],
+			    ""
+			) &
+			" | " & [Bucket Overview Selected Group Label] &
+			" | " & [Bucket Overview Selected Metric Label]
+		displayFolder: Presentation
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Bucket Overview' = calculated
+		mode: import
+		source = Row("Column", BLANK())

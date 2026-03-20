@@ -1,0 +1,35 @@
+table '_MOD Bucket Overview Targets'
+	isHidden
+
+	column TargetSelector
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [TargetSelector]
+
+	column TargetEntity
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [TargetEntity]
+
+	partition '_MOD Bucket Overview Targets' = calculated
+		mode: import
+		source = ```
+				VAR Placeholder =
+				    DATATABLE(
+				        "TargetSelector", STRING,
+				        "TargetEntity", STRING,
+				        {{"(No target)", "(No target)"}}
+				    )
+				VAR Targets =
+				    SELECTCOLUMNS(
+				        FILTER(
+				            VALUES(MOD_BIND_ENTITY_DIMENSION[Value]),
+				            NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value])
+				        ),
+				        "TargetSelector", MOD_BIND_ENTITY_DIMENSION[Value] & "",
+				        "TargetEntity", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+				    )
+				RETURN
+				UNION(Placeholder, Targets)
+				```

@@ -1,0 +1,51 @@
+table 'MOD KPI Signal'
+
+	measure 'KPI Signal Input Delta' = [MOD_BIND_DELTA_MEASURE]
+		isHidden
+
+	measure 'KPI Signal Value' =
+			
+			[KPI Signal Input Delta]
+		displayFolder: Outputs
+
+	measure 'KPI Signal Label' =
+			
+			VAR x = [KPI Signal Input Delta]
+			VAR arrow = IF(ISBLANK(x), "", IF(x >= 0, UNICHAR(9650), UNICHAR(9660)))
+			RETURN arrow & IF(ISBLANK(x), "", " " & FORMAT(x, "0.0%"))
+		displayFolder: Outputs
+
+	measure 'KPI Signal Color Hex' =
+			
+			VAR x = [KPI Signal Input Delta]
+			RETURN IF(ISBLANK(x), "#9AA0A6", IF(x >= 0, "#1AAB40", "#D64545"))
+		displayFolder: Outputs
+
+	measure 'KPI Signal Trend Class' =
+			
+			VAR x = [KPI Signal Input Delta]
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISBLANK(x), "neutral",
+			    x > 0, "positive",
+			    x < 0, "negative",
+			    "neutral"
+			)
+		displayFolder: Outputs
+
+	measure 'KPI Signal Title' =
+			
+			"KPI Delta Signal"
+		displayFolder: Presentation
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD KPI Signal' = calculated
+		mode: import
+		source = Row("Column", BLANK())

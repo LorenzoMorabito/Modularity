@@ -1,6 +1,6 @@
 {
   "moduleId": "topn_target_driver_bundle_mvp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "domain": "shared",
   "type": "semantic",
   "classification": "semantic-light",
@@ -10,7 +10,7 @@
   },
   "semanticImpact": "additive",
   "status": "experimental",
-  "description": "Generic TopN plus optional target-driven ranking bundle extracted from the legacy TopN, target entity, and top-by selector logic.",
+  "description": "Generic TopN plus optional target-driven ranking bundle extracted from the legacy TopN, target entity, and top-by selector logic, now with a reusable report page.",
   "requires": {
     "coreMeasures": [],
     "coreColumns": []
@@ -158,7 +158,11 @@
       "_MOD TopN Driver Targets",
       "_MOD TopN Driver N",
       "MOD TopN Driver"
-    ]
+    ],
+    "reportPage": {
+      "name": "d2f8b9316ca44e2ca19f",
+      "displayName": "TopN Target Driver"
+    }
   },
   "semanticUx": {
     "primaryTable": "MOD TopN Driver",

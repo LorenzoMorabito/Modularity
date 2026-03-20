@@ -1,0 +1,488 @@
+table 'MOD Bucket Family'
+
+	measure 'Bucket Family Selected N' = SELECTEDVALUE('_MOD Bucket Family N'[TopN], 5)
+		formatString: 0
+		displayFolder: Selection
+
+	measure 'Bucket Family Selected Target Entity' =
+			
+			VAR TargetEntity = SELECTEDVALUE('_MOD Bucket Family Targets'[TargetEntity])
+			RETURN
+			IF(TargetEntity = "(No target)", BLANK(), TargetEntity)
+		displayFolder: Selection
+
+	measure 'Bucket Family Current Entity' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Family Slots'[Slot])
+			VAR SlotIndex = SELECTEDVALUE('_MOD Bucket Family Slots'[NIndex])
+			VAR TargetEntity = [Bucket Family Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Family Inputs'[Bucket Family Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR AvailableEntities = COUNTROWS(RankedEntities)
+			VAR EffectiveN = MIN([Bucket Family Selected N], AvailableEntities)
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR HasNth =
+			    NOT ISBLANK(SlotIndex) &&
+			    SlotIndex >= 1 &&
+			    SlotIndex <= EffectiveN
+			VAR NthEntity =
+			    IF(
+			        HasNth,
+			        MAXX(
+			            TOPN(
+			                1,
+			                TOPN(
+			                    SlotIndex,
+			                    TopEntities,
+			                    [__ranking_value], DESC,
+			                    MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			                ),
+			                [__ranking_value], ASC,
+			                MOD_BIND_ENTITY_DIMENSION[Value], DESC
+			            ),
+			            MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			        )
+			    )
+			VAR HasOthers = AvailableEntities > EffectiveN
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET", TargetEntity,
+			    Slot = "OTHERS", IF(HasOthers, "OTHERS", BLANK()),
+			    LEFT(Slot, 3) = "TOP" && HasNth, NthEntity,
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Family Rank' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Family Slots'[Slot])
+			VAR SlotIndex = SELECTEDVALUE('_MOD Bucket Family Slots'[NIndex])
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET", 0,
+			    LEFT(Slot, 3) = "TOP", SlotIndex,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Outputs
+
+	measure 'Bucket Family Current Value' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Family Slots'[Slot])
+			VAR CurrentEntity = [Bucket Family Current Entity]
+			VAR TargetEntity = [Bucket Family Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Family Inputs'[Bucket Family Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Family Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Family Inputs'[Bucket Family Input Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Family Inputs'[Bucket Family Input Current Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Family Inputs'[Bucket Family Input Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Family Previous Quarter Value' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Family Slots'[Slot])
+			VAR CurrentEntity = [Bucket Family Current Entity]
+			VAR TargetEntity = [Bucket Family Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Family Inputs'[Bucket Family Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Family Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Family Inputs'[Bucket Family Input Previous Quarter Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Family Inputs'[Bucket Family Input Previous Quarter Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Family Inputs'[Bucket Family Input Previous Quarter Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Family Previous Year Value' =
+			
+			VAR Slot = SELECTEDVALUE('_MOD Bucket Family Slots'[Slot])
+			VAR CurrentEntity = [Bucket Family Current Entity]
+			VAR TargetEntity = [Bucket Family Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Family Inputs'[Bucket Family Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Family Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    Slot = "TARGET" && NOT ISBLANK(TargetEntity),
+			        CALCULATE(
+			            '_MOD Bucket Family Inputs'[Bucket Family Input Previous Year Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = TargetEntity
+			            )
+			        ),
+			    Slot = "OTHERS",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Family Inputs'[Bucket Family Input Previous Year Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    LEFT(Slot, 3) = "TOP" && NOT ISBLANK(CurrentEntity),
+			        CALCULATE(
+			            '_MOD Bucket Family Inputs'[Bucket Family Input Previous Year Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = CurrentEntity
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Family Current Total' = '_MOD Bucket Family Inputs'[Bucket Family Input Current Total Measure]
+		displayFolder: Outputs
+
+	measure 'Bucket Family Previous Year Total' = '_MOD Bucket Family Inputs'[Bucket Family Input Previous Year Total Measure]
+		displayFolder: Outputs
+
+	measure 'Bucket Family Share' = DIVIDE([Bucket Family Current Value], [Bucket Family Current Total])
+		displayFolder: Outputs
+
+	measure 'Bucket Family Share PY' = DIVIDE([Bucket Family Previous Year Value], [Bucket Family Previous Year Total])
+		displayFolder: Outputs
+
+	measure 'Bucket Family QoQ%' = DIVIDE([Bucket Family Current Value] - [Bucket Family Previous Quarter Value], [Bucket Family Previous Quarter Value])
+		displayFolder: Outputs
+
+	measure 'Bucket Family YoY%' = DIVIDE([Bucket Family Current Value] - [Bucket Family Previous Year Value], [Bucket Family Previous Year Value])
+		displayFolder: Outputs
+
+	measure 'Bucket Family EI' =
+			
+			VAR SharePY = [Bucket Family Share PY]
+			RETURN
+			IF(ISBLANK(SharePY), BLANK(), DIVIDE([Bucket Family Share], SharePY) * 100)
+		displayFolder: Outputs
+
+	measure 'Bucket Family Show Row' =
+			
+			IF(
+			    NOT ISBLANK([Bucket Family Current Entity]) ||
+			    NOT ISBLANK([Bucket Family Current Value]),
+			    1,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Bucket Family Legend Selected Entity' = SELECTEDVALUE('_MOD Bucket Family Legend'[Legend])
+		displayFolder: Outputs
+
+	measure 'Bucket Family Legend Role' =
+			
+			VAR LegendEntity = [Bucket Family Legend Selected Entity]
+			VAR TargetEntity = [Bucket Family Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Family Inputs'[Bucket Family Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Family Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    ISBLANK(LegendEntity), BLANK(),
+			    LegendEntity = "OTHERS" && COUNTROWS(OthersEntities) > 0, "Others",
+			    NOT ISBLANK(TargetEntity) && LegendEntity = TargetEntity, "Target",
+			    CONTAINS(TopEntityNames, [EntityText], LegendEntity), "TopN",
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Family Legend Current Value' =
+			
+			VAR LegendEntity = [Bucket Family Legend Selected Entity]
+			VAR LegendRole = [Bucket Family Legend Role]
+			VAR TargetEntity = [Bucket Family Selected Target Entity]
+			VAR CandidateEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity)
+			    )
+			VAR RankedEntitiesRaw =
+			    ADDCOLUMNS(
+			        CandidateEntities,
+			        "__ranking_value", CALCULATE('_MOD Bucket Family Inputs'[Bucket Family Input Ranking Measure])
+			    )
+			VAR RankedEntities =
+			    FILTER(RankedEntitiesRaw, NOT ISBLANK([__ranking_value]))
+			VAR EffectiveN = MIN([Bucket Family Selected N], COUNTROWS(RankedEntities))
+			VAR TopEntities =
+			    TOPN(
+			        EffectiveN,
+			        RankedEntities,
+			        [__ranking_value], DESC,
+			        MOD_BIND_ENTITY_DIMENSION[Value], ASC
+			    )
+			VAR TopEntityNames =
+			    SELECTCOLUMNS(
+			        TopEntities,
+			        "EntityText", MOD_BIND_ENTITY_DIMENSION[Value] & ""
+			    )
+			VAR OthersEntities =
+			    FILTER(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        NOT ISBLANK(MOD_BIND_ENTITY_DIMENSION[Value]) &&
+			        (ISBLANK(TargetEntity) || (MOD_BIND_ENTITY_DIMENSION[Value] & "") <> TargetEntity) &&
+			        NOT CONTAINS(TopEntityNames, [EntityText], MOD_BIND_ENTITY_DIMENSION[Value] & "")
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    LegendRole = "Target" || LegendRole = "TopN",
+			        CALCULATE(
+			            '_MOD Bucket Family Inputs'[Bucket Family Input Current Measure],
+			            FILTER(
+			                ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			                (MOD_BIND_ENTITY_DIMENSION[Value] & "") = LegendEntity
+			            )
+			        ),
+			    LegendRole = "Others",
+			        VAR OthersList = SELECTCOLUMNS(OthersEntities, "EntityValue", MOD_BIND_ENTITY_DIMENSION[Value])
+			        RETURN
+			        IF(
+			            COUNTROWS(OthersEntities) = 0,
+			            BLANK(),
+			            CALCULATE(
+			                '_MOD Bucket Family Inputs'[Bucket Family Input Current Measure],
+			                TREATAS(OthersList, MOD_BIND_ENTITY_DIMENSION[Value])
+			            )
+			        ),
+			    BLANK()
+			)
+		displayFolder: Outputs
+
+	measure 'Bucket Family Legend Share' = DIVIDE([Bucket Family Legend Current Value], [Bucket Family Current Total])
+		displayFolder: Outputs
+
+	measure 'Bucket Family Legend Show Item' =
+			
+			IF(
+			    NOT ISBLANK([Bucket Family Legend Role]) &&
+			    NOT ISBLANK([Bucket Family Legend Current Value]),
+			    1,
+			    BLANK()
+			)
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Bucket Family Title' =
+			
+			"Top " & FORMAT([Bucket Family Selected N], "0") &
+			IF(
+			    NOT ISBLANK([Bucket Family Selected Target Entity]),
+			    " + target " & [Bucket Family Selected Target Entity],
+			    ""
+			)
+		displayFolder: Presentation
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Bucket Family' = calculated
+		mode: import
+		source = Row("Column", BLANK())

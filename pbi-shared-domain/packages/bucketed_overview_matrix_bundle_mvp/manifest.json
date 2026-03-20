@@ -1,0 +1,247 @@
+{
+  "moduleId": "bucketed_overview_matrix_bundle_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Combined bucketed overview matrix bundle that keeps target, TopN, legend, dual-family matrix logic, and a reusable report page together in one installable package.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_RANKING_MEASURE",
+      "MOD_BIND_PRIMARY_CURRENT_MEASURE",
+      "MOD_BIND_PRIMARY_PREVIOUS_QUARTER_MEASURE",
+      "MOD_BIND_PRIMARY_PREVIOUS_YEAR_MEASURE",
+      "MOD_BIND_PRIMARY_CURRENT_TOTAL_MEASURE",
+      "MOD_BIND_PRIMARY_PREVIOUS_YEAR_TOTAL_MEASURE",
+      "MOD_BIND_SECONDARY_CURRENT_MEASURE",
+      "MOD_BIND_SECONDARY_PREVIOUS_QUARTER_MEASURE",
+      "MOD_BIND_SECONDARY_PREVIOUS_YEAR_MEASURE",
+      "MOD_BIND_SECONDARY_CURRENT_TOTAL_MEASURE",
+      "MOD_BIND_SECONDARY_PREVIOUS_YEAR_TOTAL_MEASURE"
+    ],
+    "coreColumns": [
+      "MOD_BIND_ENTITY_DIMENSION[Value]"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "entity_dimension",
+        "bindingKey": "MOD_BIND_ENTITY_DIMENSION[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Entity Dimension",
+        "description": "Dimension bucketed into target, TopN competitors, and Others.",
+        "semanticRole": "bucket.entity",
+        "defaultValue": "T_DIM_CORPORATION[Corporation]",
+        "suggestions": [
+          "Corporation",
+          "Company",
+          "Brand",
+          "Product"
+        ]
+      },
+      {
+        "id": "ranking_measure",
+        "bindingKey": "MOD_BIND_RANKING_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Ranking Measure",
+        "description": "Measure used to rank the entity dimension and define the TopN competitors.",
+        "semanticRole": "bucket.ranking",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "Ranking",
+          "Share"
+        ]
+      },
+      {
+        "id": "primary_current_measure",
+        "bindingKey": "MOD_BIND_PRIMARY_CURRENT_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Current Measure",
+        "description": "Current-period measure for the primary overview family.",
+        "semanticRole": "bucket.overview.primary.current",
+        "defaultValue": "Sales Measure (Bucket, LP)",
+        "suggestions": [
+          "Sales Measure (Bucket, LP)",
+          "ACT",
+          "Current",
+          "Primary"
+        ]
+      },
+      {
+        "id": "primary_previous_quarter_measure",
+        "bindingKey": "MOD_BIND_PRIMARY_PREVIOUS_QUARTER_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Previous Quarter Measure",
+        "description": "Previous-quarter reference for the primary overview family.",
+        "semanticRole": "bucket.overview.primary.previous-quarter",
+        "defaultValue": "Sales Measure (Bucket, PQ)",
+        "suggestions": [
+          "Sales Measure (Bucket, PQ)",
+          "PQ",
+          "Previous Quarter"
+        ]
+      },
+      {
+        "id": "primary_previous_year_measure",
+        "bindingKey": "MOD_BIND_PRIMARY_PREVIOUS_YEAR_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Previous Year Measure",
+        "description": "Previous-year reference for the primary overview family.",
+        "semanticRole": "bucket.overview.primary.previous-year",
+        "defaultValue": "Sales Measure (Bucket, PY)",
+        "suggestions": [
+          "Sales Measure (Bucket, PY)",
+          "PY",
+          "Previous Year"
+        ]
+      },
+      {
+        "id": "primary_current_total_measure",
+        "bindingKey": "MOD_BIND_PRIMARY_CURRENT_TOTAL_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Current Total Measure",
+        "description": "Current total-market denominator for the primary overview family.",
+        "semanticRole": "bucket.overview.primary.current-total",
+        "defaultValue": "Sales Market Total (LP)",
+        "suggestions": [
+          "Sales Market Total (LP)",
+          "Total",
+          "Primary Total"
+        ]
+      },
+      {
+        "id": "primary_previous_year_total_measure",
+        "bindingKey": "MOD_BIND_PRIMARY_PREVIOUS_YEAR_TOTAL_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Primary Previous Year Total Measure",
+        "description": "Previous-year total-market denominator for the primary overview family.",
+        "semanticRole": "bucket.overview.primary.previous-year-total",
+        "defaultValue": "Sales Market Total (PY)",
+        "suggestions": [
+          "Sales Market Total (PY)",
+          "PY Total",
+          "Primary Total"
+        ]
+      },
+      {
+        "id": "secondary_current_measure",
+        "bindingKey": "MOD_BIND_SECONDARY_CURRENT_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Current Measure",
+        "description": "Current-period measure for the secondary overview family.",
+        "semanticRole": "bucket.overview.secondary.current",
+        "defaultValue": "Promo Measure (Bucket, LP)",
+        "suggestions": [
+          "Promo Measure (Bucket, LP)",
+          "ACT",
+          "Current",
+          "Secondary"
+        ]
+      },
+      {
+        "id": "secondary_previous_quarter_measure",
+        "bindingKey": "MOD_BIND_SECONDARY_PREVIOUS_QUARTER_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Previous Quarter Measure",
+        "description": "Previous-quarter reference for the secondary overview family.",
+        "semanticRole": "bucket.overview.secondary.previous-quarter",
+        "defaultValue": "Promo Measure (Bucket, PQ)",
+        "suggestions": [
+          "Promo Measure (Bucket, PQ)",
+          "PQ",
+          "Previous Quarter"
+        ]
+      },
+      {
+        "id": "secondary_previous_year_measure",
+        "bindingKey": "MOD_BIND_SECONDARY_PREVIOUS_YEAR_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Previous Year Measure",
+        "description": "Previous-year reference for the secondary overview family.",
+        "semanticRole": "bucket.overview.secondary.previous-year",
+        "defaultValue": "Promo Measure (Bucket, PY)",
+        "suggestions": [
+          "Promo Measure (Bucket, PY)",
+          "PY",
+          "Previous Year"
+        ]
+      },
+      {
+        "id": "secondary_current_total_measure",
+        "bindingKey": "MOD_BIND_SECONDARY_CURRENT_TOTAL_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Current Total Measure",
+        "description": "Current total-market denominator for the secondary overview family.",
+        "semanticRole": "bucket.overview.secondary.current-total",
+        "defaultValue": "Promo Market Total (LP)",
+        "suggestions": [
+          "Promo Market Total (LP)",
+          "Total",
+          "Secondary Total"
+        ]
+      },
+      {
+        "id": "secondary_previous_year_total_measure",
+        "bindingKey": "MOD_BIND_SECONDARY_PREVIOUS_YEAR_TOTAL_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Secondary Previous Year Total Measure",
+        "description": "Previous-year total-market denominator for the secondary overview family.",
+        "semanticRole": "bucket.overview.secondary.previous-year-total",
+        "defaultValue": "Promo Market Total (PY)",
+        "suggestions": [
+          "Promo Market Total (PY)",
+          "PY Total",
+          "Secondary Total"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Bucket Overview Inputs",
+      "_MOD Bucket Overview Targets",
+      "_MOD Bucket Overview N",
+      "_MOD Bucket Overview Slots",
+      "_MOD Bucket Overview Legend",
+      "_MOD Bucket Overview Structure",
+      "MOD Bucket Overview"
+    ],
+    "reportPage": {
+      "name": "a5b47dc9f3e84c0f9b10",
+      "displayName": "Bucketed Overview Matrix"
+    }
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Bucket Overview",
+    "hiddenTables": [
+      "_MOD Bucket Overview Inputs",
+      "_MOD Bucket Overview Targets",
+      "_MOD Bucket Overview N",
+      "_MOD Bucket Overview Slots",
+      "_MOD Bucket Overview Legend",
+      "_MOD Bucket Overview Structure"
+    ]
+  }
+}

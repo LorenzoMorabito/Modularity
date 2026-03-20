@@ -1,0 +1,403 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.6.0/schema.json",
+  "name": "bucket_overview_table",
+  "position": {
+    "x": 24,
+    "y": 196,
+    "z": 200,
+    "height": 492,
+    "width": 856,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_MOD Bucket Overview Slots"
+                    }
+                  },
+                  "Property": "Slot"
+                }
+              },
+              "queryRef": "_MOD Bucket Overview Slots.Slot",
+              "nativeQueryRef": "Slot",
+              "displayName": "Bucket"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Current Entity"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Current Entity",
+              "nativeQueryRef": "Bucket Overview Current Entity",
+              "displayName": "Entity"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Primary Current"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Primary Current",
+              "nativeQueryRef": "Bucket Overview Primary Current",
+              "displayName": "Primary | ACT"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Primary Share"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Primary Share",
+              "nativeQueryRef": "Bucket Overview Primary Share",
+              "displayName": "Primary | MS%"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Primary QoQ%"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Primary QoQ%",
+              "nativeQueryRef": "Bucket Overview Primary QoQ%",
+              "displayName": "Primary | QoQ%"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Primary YoY%"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Primary YoY%",
+              "nativeQueryRef": "Bucket Overview Primary YoY%",
+              "displayName": "Primary | YoY%"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Primary EI"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Primary EI",
+              "nativeQueryRef": "Bucket Overview Primary EI",
+              "displayName": "Primary | EI"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Secondary Current"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Secondary Current",
+              "nativeQueryRef": "Bucket Overview Secondary Current",
+              "displayName": "Secondary | ACT"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Secondary Share"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Secondary Share",
+              "nativeQueryRef": "Bucket Overview Secondary Share",
+              "displayName": "Secondary | MS%"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Secondary QoQ%"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Secondary QoQ%",
+              "nativeQueryRef": "Bucket Overview Secondary QoQ%",
+              "displayName": "Secondary | QoQ%"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Secondary YoY%"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Secondary YoY%",
+              "nativeQueryRef": "Bucket Overview Secondary YoY%",
+              "displayName": "Secondary | YoY%"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "MOD Bucket Overview"
+                    }
+                  },
+                  "Property": "Bucket Overview Secondary EI"
+                }
+              },
+              "queryRef": "MOD Bucket Overview.Bucket Overview Secondary EI",
+              "nativeQueryRef": "Bucket Overview Secondary EI",
+              "displayName": "Secondary | EI"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'growToFit'"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "grid": [
+        {
+          "properties": {
+            "outlineStyle": {
+              "expr": {
+                "Literal": {
+                  "Value": "4D"
+                }
+              }
+            },
+            "gridVertical": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Bucketed Overview Table'"
+                }
+              }
+            },
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
+                }
+              }
+            },
+            "width": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "b219c5f64b004d02a111",
+        "ordinal": 0,
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "MOD Bucket Overview"
+              }
+            },
+            "Property": "Bucket Overview Show Row"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "f",
+              "Entity": "MOD Bucket Overview",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Comparison": {
+                  "ComparisonKind": 0,
+                  "Left": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Source": "f"
+                        }
+                      },
+                      "Property": "Bucket Overview Show Row"
+                    }
+                  },
+                  "Right": {
+                    "Literal": {
+                      "Value": "1L"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      }
+    ],
+    "filterSortOrder": "Custom"
+  }
+}

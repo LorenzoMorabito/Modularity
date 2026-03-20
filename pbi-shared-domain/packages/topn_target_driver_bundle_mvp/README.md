@@ -1,6 +1,6 @@
 # TopN Target Driver Bundle MVP
 
-Bundle semantic-first estratto dal cluster legacy `TopN` + `Dim_Entity` + `SwitchTopByDimension` + `SwitchTopByMesure`.
+Bundle estratto dal cluster legacy `TopN` + `Dim_Entity` + `SwitchTopByDimension` + `SwitchTopByMesure`, con semantic model e report UX riusabile.
 
 ## Obiettivo
 
@@ -8,6 +8,7 @@ Bundle semantic-first estratto dal cluster legacy `TopN` + `Dim_Entity` + `Switc
 - selezionare il grain da ordinare
 - opzionalmente fissare un target da mantenere sempre in vista
 - esporre misure riusabili per rank, inclusione nel set TopN e highlight del target
+- installare una pagina report pronta con slicer e driver table
 
 ## Binding
 
@@ -26,6 +27,16 @@ Bundle semantic-first estratto dal cluster legacy `TopN` + `Dim_Entity` + `Switc
   - `_MOD TopN Driver Targets`
   - `_MOD TopN Driver N`
 
+## Output report
+
+- pagina: `TopN Target Driver`
+- slicer inclusi:
+  - grain
+  - ranking metric
+  - target entity
+  - Top N
+- tabella driver filtrata sul set TopN risultante
+
 ## Note
 
-Questa prima versione estrae il core semantic del pattern TopN/target. La report UX puo essere aggiunta in una wave successiva senza cambiare il contract di binding.
+Il grain selector e implementato come field-parameter table, quindi il bundle resta generalista e puo cambiare asse senza dipendere dallo schema del consumer.

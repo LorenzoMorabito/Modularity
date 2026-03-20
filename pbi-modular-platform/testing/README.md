@@ -76,6 +76,19 @@
 
 - `smoke-install` clona il target in un sandbox temporaneo, reinstalla il modulo e valida il risultato
 - per i moduli con `bindingContract`, passare `-MappingFile` quando il progetto non puo essere risolto in modo univoco dai default
+- il `MappingFile` per i moduli guided deve usare la shape:
+
+```json
+{
+  "coreColumns": {
+    "MOD_BIND_SOME_COLUMN[Value]": "TargetTable[TargetColumn]"
+  },
+  "coreMeasures": {
+    "MOD_BIND_SOME_MEASURE": "Target Measure"
+  }
+}
+```
+
 - il framework e statico/sandbox: non automatizza un ciclo completo di apertura/render di Power BI Desktop
 - oggi i 4 progetti `PBIP` versionati passano `test-project`
 

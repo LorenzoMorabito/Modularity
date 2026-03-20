@@ -64,7 +64,7 @@ These areas are valid package candidates but are still more intertwined at repor
    - ranking table logic
    Status:
    - semantic-first extraction implemented
-   - report UX still pending as a follow-up wave
+   - reusable report page implemented
 
 3. `bucketed_overview_matrix_bundle_mvp`
    Combines:
@@ -73,9 +73,11 @@ These areas are valid package candidates but are still more intertwined at repor
    - bucketed LP measures
    - comparison matrix layout logic
    Status:
+   - bucket-aware metric family extracted as `bucket_metric_family_bundle_mvp`
    - bucket / legend semantic engine extracted as `bucket_slot_legend_engine_mvp`
    - matrix metric engine extracted as `bucket_metric_matrix_engine_mvp`
-   - combined report bundle still pending as a follow-up layer
+   - combined full overview bundle extracted as `bucketed_overview_matrix_bundle_mvp`
+   - separate report-only split remains optional if needed later
 
 ## Legacy-to-Package Mapping
 
@@ -125,6 +127,12 @@ Generalization notes:
   - one period axis column
 - lag tables remain technical internal assets
 
+4. `spend_bucket_pareto_mvp`
+   Generic Pareto-style spend bucketing extracted from the legacy `GroupBySpending` logic.
+
+5. `kpi_delta_signal_mvp`
+   Generic one-measure KPI formatter extracted from the legacy `KpiColorLabel` logic.
+
 ### `bucket_slot_legend_engine_mvp`
 
 Derived from:
@@ -161,6 +169,87 @@ Generalization notes:
   - dynamic selected value measure
 - the primary and secondary measure families are user-bound, so the package is no longer tied to sales and promo naming
 
+### `bucket_metric_family_bundle_mvp`
+
+Derived from:
+
+- `Msr Sales Buckets`
+- `Msr Sales Buckets LP`
+- `Msr Promo Buckets`
+- `Msr Promo Buckets LP`
+
+Generalization notes:
+
+- the legacy logic mixed bucket selection, target handling, and a full metric family in the same tables
+- this extracted bundle preserves that combined logic in one reusable semantic package
+- the user binds:
+  - one entity dimension
+  - one ranking measure
+  - current / PQ / PY family measures
+  - current total / PY total denominators
+- the resulting package exposes current value, share, QoQ, YoY, EI, and legend outputs without hardcoding sales or promo naming
+
+### `bucketed_overview_matrix_bundle_mvp`
+
+Derived from:
+
+- `Corporation Buckets`
+- `LegendCorp`
+- `ColumnStructure`
+- `Msr Sales Buckets`
+- `Msr Sales Buckets LP`
+- `Msr Promo Buckets`
+- `Msr Promo Buckets LP`
+
+Generalization notes:
+
+- this is the "keep it together" extraction of the legacy overview cluster
+- it combines:
+  - target and TopN selectors
+  - target / TopN / Others bucketing
+  - dual metric families
+  - overview matrix column structure
+  - legend outputs
+  - a reusable report page
+- the user binds:
+  - one entity dimension
+  - one ranking measure
+  - a primary current / PQ / PY / total family
+  - a secondary current / PQ / PY / total family
+- the result is one visible facade table plus an installable report page that can drive a bucketed overview matrix without being tied to sales, promo, or finance naming
+
+### `spend_bucket_pareto_mvp`
+
+Derived from:
+
+- `GroupBySpending`
+
+Generalization notes:
+
+- the legacy object mixed product-specific bucketing and presentation helpers
+- the extracted package keeps the reusable semantic logic only:
+  - one rankable entity dimension
+  - one spend measure
+  - derived entity rank
+  - cumulative share
+  - Top1 / Top2-5 / Top6-10 / Rest bucket outputs
+- total spend is derived by removing filters from the bound entity dimension, so the package stays schema-agnostic
+
+### `kpi_delta_signal_mvp`
+
+Derived from:
+
+- `KpiColorLabel`
+
+Generalization notes:
+
+- the legacy table hardcoded one specific YoY measure
+- the extracted package binds any delta measure and exposes:
+  - formatted arrow label
+  - color hex
+  - trend class
+- this keeps the useful conditional formatting pattern without inheriting the original sales-only naming
+
 ## Design Rules For Extracted Packages
 
 - domain must be `shared` for reusable cross-schema logic
@@ -168,6 +257,17 @@ Generalization notes:
 - technical tables prefixed `_MOD `
 - no hardcoded table names from the source consumer in business-facing measures
 - report assets are optional in first-wave semantic packages when the logic is primarily model-driven
+
+## Residual Legacy Helpers Not Promoted As Standalone Packages
+
+These legacy objects were reviewed but are not being promoted as separate installable packages in the current wave:
+
+- `Dim_Entity`
+  The useful target-selection logic is already absorbed into `topn_target_driver_bundle_mvp`.
+- `.Titles`
+  Most title measures are thin narrative wrappers around selectors that are now better owned inside the report UX of each extracted package.
+- `.Colours`
+  The reusable part of the pattern is covered by `kpi_delta_signal_mvp`; the remaining color helpers are tightly coupled to package-specific measures.
 
 ## Testing Scope
 

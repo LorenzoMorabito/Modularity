@@ -1,0 +1,164 @@
+{
+  "moduleId": "bucket_metric_family_bundle_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic bucket-aware metric family bundle extracted from the legacy sales and promo bucket logic.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_RANKING_MEASURE",
+      "MOD_BIND_CURRENT_MEASURE",
+      "MOD_BIND_PREVIOUS_QUARTER_MEASURE",
+      "MOD_BIND_PREVIOUS_YEAR_MEASURE",
+      "MOD_BIND_CURRENT_TOTAL_MEASURE",
+      "MOD_BIND_PREVIOUS_YEAR_TOTAL_MEASURE"
+    ],
+    "coreColumns": [
+      "MOD_BIND_ENTITY_DIMENSION[Value]"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "entity_dimension",
+        "bindingKey": "MOD_BIND_ENTITY_DIMENSION[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Entity Dimension",
+        "description": "Dimension bucketed into target, TopN competitors, and Others.",
+        "semanticRole": "bucket.entity",
+        "defaultValue": "T_DIM_CORPORATION[Corporation]",
+        "suggestions": [
+          "Corporation",
+          "Company",
+          "Brand",
+          "Product"
+        ]
+      },
+      {
+        "id": "ranking_measure",
+        "bindingKey": "MOD_BIND_RANKING_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Ranking Measure",
+        "description": "Measure used to rank the entity dimension and define the TopN competitors.",
+        "semanticRole": "bucket.ranking",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "Ranking",
+          "Share"
+        ]
+      },
+      {
+        "id": "current_measure",
+        "bindingKey": "MOD_BIND_CURRENT_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Current Measure",
+        "description": "Current-period measure aggregated into target, TopN, and Others buckets.",
+        "semanticRole": "bucket.family.current",
+        "defaultValue": "Sales Measure (Bucket, LP)",
+        "suggestions": [
+          "Sales Measure (Bucket, LP)",
+          "Promo Measure (Bucket, LP)",
+          "ACT",
+          "Current"
+        ]
+      },
+      {
+        "id": "previous_quarter_measure",
+        "bindingKey": "MOD_BIND_PREVIOUS_QUARTER_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Previous Quarter Measure",
+        "description": "Reference measure used for quarter-over-quarter calculations.",
+        "semanticRole": "bucket.family.previous-quarter",
+        "defaultValue": "Sales Measure (Bucket, PQ)",
+        "suggestions": [
+          "Sales Measure (Bucket, PQ)",
+          "Promo Measure (Bucket, PQ)",
+          "PQ",
+          "Previous Quarter"
+        ]
+      },
+      {
+        "id": "previous_year_measure",
+        "bindingKey": "MOD_BIND_PREVIOUS_YEAR_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Previous Year Measure",
+        "description": "Reference measure used for year-over-year calculations.",
+        "semanticRole": "bucket.family.previous-year",
+        "defaultValue": "Sales Measure (Bucket, PY)",
+        "suggestions": [
+          "Sales Measure (Bucket, PY)",
+          "Promo Measure (Bucket, PY)",
+          "PY",
+          "Previous Year"
+        ]
+      },
+      {
+        "id": "current_total_measure",
+        "bindingKey": "MOD_BIND_CURRENT_TOTAL_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Current Total Measure",
+        "description": "Total-market denominator used for current share calculations.",
+        "semanticRole": "bucket.family.current-total",
+        "defaultValue": "Sales Market Total (LP)",
+        "suggestions": [
+          "Sales Market Total (LP)",
+          "Promo Market Total (LP)",
+          "Total",
+          "Denominator"
+        ]
+      },
+      {
+        "id": "previous_year_total_measure",
+        "bindingKey": "MOD_BIND_PREVIOUS_YEAR_TOTAL_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Previous Year Total Measure",
+        "description": "Total-market denominator used for previous-year share calculations.",
+        "semanticRole": "bucket.family.previous-year-total",
+        "defaultValue": "Sales Market Total (PY)",
+        "suggestions": [
+          "Sales Market Total (PY)",
+          "Promo Market Total (PY)",
+          "PY Total",
+          "Denominator"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Bucket Family Inputs",
+      "_MOD Bucket Family Targets",
+      "_MOD Bucket Family N",
+      "_MOD Bucket Family Slots",
+      "_MOD Bucket Family Legend",
+      "MOD Bucket Family"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Bucket Family",
+    "hiddenTables": [
+      "_MOD Bucket Family Inputs",
+      "_MOD Bucket Family Targets",
+      "_MOD Bucket Family N",
+      "_MOD Bucket Family Slots",
+      "_MOD Bucket Family Legend"
+    ]
+  }
+}

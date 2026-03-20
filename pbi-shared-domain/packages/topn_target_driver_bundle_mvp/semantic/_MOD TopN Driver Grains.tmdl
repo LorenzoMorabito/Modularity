@@ -1,24 +1,49 @@
 table '_MOD TopN Driver Grains'
 	isHidden
 
-	column GrainKey
-		isHidden
-		summarizeBy: none
-		isNameInferred
-		sourceColumn: [GrainKey]
-
 	column GrainLabel
 		summarizeBy: none
-		isNameInferred
-		sourceColumn: [GrainLabel]
+		sourceColumn: [Value1]
+		sortByColumn: GrainSort
+
+		relatedColumnDetails
+			groupByColumn: GrainFields
+
+		annotation SummarizationSetBy = Automatic
+
+	column GrainFields
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: GrainSort
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
 
 	column GrainSort
 		isHidden
 		formatString: 0
-		summarizeBy: sum
-		isNameInferred
-		sourceColumn: [GrainSort]
+		summarizeBy: none
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	column GrainKey
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value4]
 
 	partition '_MOD TopN Driver Grains' = calculated
 		mode: import
-		source = DATATABLE("GrainKey", STRING, "GrainLabel", STRING, "GrainSort", INTEGER, {{"dimension_1", "TODO", 1}})
+		source =
+				{
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_1[Value]}}", NAMEOF('MOD_BIND_DIMENSION_1'[Value]), 0, "dimension_1"),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_2[Value]}}", NAMEOF('MOD_BIND_DIMENSION_2'[Value]), 1, "dimension_2"),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_3[Value]}}", NAMEOF('MOD_BIND_DIMENSION_3'[Value]), 2, "dimension_3"),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_4[Value]}}", NAMEOF('MOD_BIND_DIMENSION_4'[Value]), 3, "dimension_4")
+				}

@@ -1,0 +1,84 @@
+table 'MOD Spend Buckets'
+
+	measure 'Spend Buckets Input Measure' = [MOD_BIND_SPEND_MEASURE]
+		isHidden
+
+	measure 'Spend Total' =
+			
+			CALCULATE([Spend Buckets Input Measure], REMOVEFILTERS(MOD_BIND_ENTITY_DIMENSION[Value]))
+		displayFolder: Diagnostics
+
+	measure 'Spend Entity Rank' =
+			
+			RANKX(ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]), [Spend Buckets Input Measure], , DESC, DENSE)
+		formatString: 0
+		displayFolder: Entity
+
+	measure 'Spend Entity Cumulative Share' =
+			
+			VAR r = [Spend Entity Rank]
+			RETURN
+			DIVIDE(
+			    CALCULATE([Spend Buckets Input Measure], FILTER(ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]), [Spend Entity Rank] <= r)),
+			    [Spend Total]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Entity
+
+	measure 'Spend Entity Bucket' =
+			
+			VAR r = [Spend Entity Rank]
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    r = 1, "Top1",
+			    r <= 5, "Top2-5",
+			    r <= 10, "Top6-10",
+			    "Rest"
+			)
+		displayFolder: Entity
+
+	measure 'Spend Bucket Value' =
+			
+			VAR bucket = SELECTEDVALUE('_MOD Spend Buckets'[Bucket])
+			VAR base =
+			    ADDCOLUMNS(
+			        ALLSELECTED(MOD_BIND_ENTITY_DIMENSION[Value]),
+			        "__spend", [Spend Buckets Input Measure]
+			    )
+			VAR ranked =
+			    ADDCOLUMNS(
+			        base,
+			        "__rank", RANKX(base, [__spend], , DESC, DENSE)
+			    )
+			RETURN
+			SWITCH(
+			    TRUE(),
+			    bucket = "Top1",    SUMX(FILTER(ranked, [__rank] = 1), [__spend]),
+			    bucket = "Top2-5",  SUMX(FILTER(ranked, [__rank] >= 2 && [__rank] <= 5), [__spend]),
+			    bucket = "Top6-10", SUMX(FILTER(ranked, [__rank] >= 6 && [__rank] <= 10), [__spend]),
+			    bucket = "Rest",    SUMX(FILTER(ranked, [__rank] > 10), [__spend])
+			)
+		displayFolder: Buckets
+
+	measure 'Spend Bucket Share' =
+			
+			DIVIDE([Spend Bucket Value], [Spend Total])
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Buckets
+
+	measure 'Spend Bucket Title' =
+			
+			"Pareto Spend Buckets"
+		displayFolder: Presentation
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Spend Buckets' = calculated
+		mode: import
+		source = Row("Column", BLANK())

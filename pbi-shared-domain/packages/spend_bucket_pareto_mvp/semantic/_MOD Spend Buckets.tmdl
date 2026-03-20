@@ -1,0 +1,30 @@
+table '_MOD Spend Buckets'
+	isHidden
+
+	column Bucket
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Bucket]
+		sortByColumn: Sort
+
+	column Sort
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Sort]
+
+	partition '_MOD Spend Buckets' = calculated
+		mode: import
+		source = ```
+				DATATABLE(
+				    "Bucket", STRING,
+				    "Sort", INTEGER,
+				    {
+				        {"Top1", 1},
+				        {"Top2-5", 2},
+				        {"Top6-10", 3},
+				        {"Rest", 4}
+				    }
+				)
+				```

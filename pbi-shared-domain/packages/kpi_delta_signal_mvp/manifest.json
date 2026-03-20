@@ -1,0 +1,50 @@
+{
+  "moduleId": "kpi_delta_signal_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic KPI delta label and color formatter extracted from the legacy KpiColorLabel logic.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_DELTA_MEASURE"
+    ],
+    "coreColumns": []
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "delta_measure",
+        "bindingKey": "MOD_BIND_DELTA_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Delta Measure",
+        "description": "Percent or delta measure to format with arrow label and color signal.",
+        "semanticRole": "kpi.delta",
+        "defaultValue": "Sales Values Δ% vs PY",
+        "suggestions": [
+          "YoY %",
+          "QoQ %",
+          "Growth %",
+          "Delta %"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "MOD KPI Signal"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD KPI Signal",
+    "hiddenTables": []
+  }
+}

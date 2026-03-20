@@ -1,0 +1,35 @@
+table '_MOD Bucket Overview Inputs'
+	isHidden
+
+	measure 'Bucket Overview Input Ranking Measure' = [MOD_BIND_RANKING_MEASURE]
+
+	measure 'Bucket Overview Input Primary Current Measure' = [MOD_BIND_PRIMARY_CURRENT_MEASURE]
+
+	measure 'Bucket Overview Input Primary Previous Quarter Measure' = [MOD_BIND_PRIMARY_PREVIOUS_QUARTER_MEASURE]
+
+	measure 'Bucket Overview Input Primary Previous Year Measure' = [MOD_BIND_PRIMARY_PREVIOUS_YEAR_MEASURE]
+
+	measure 'Bucket Overview Input Primary Current Total Measure' = [MOD_BIND_PRIMARY_CURRENT_TOTAL_MEASURE]
+
+	measure 'Bucket Overview Input Primary Previous Year Total Measure' = [MOD_BIND_PRIMARY_PREVIOUS_YEAR_TOTAL_MEASURE]
+
+	measure 'Bucket Overview Input Secondary Current Measure' = [MOD_BIND_SECONDARY_CURRENT_MEASURE]
+
+	measure 'Bucket Overview Input Secondary Previous Quarter Measure' = [MOD_BIND_SECONDARY_PREVIOUS_QUARTER_MEASURE]
+
+	measure 'Bucket Overview Input Secondary Previous Year Measure' = [MOD_BIND_SECONDARY_PREVIOUS_YEAR_MEASURE]
+
+	measure 'Bucket Overview Input Secondary Current Total Measure' = [MOD_BIND_SECONDARY_CURRENT_TOTAL_MEASURE]
+
+	measure 'Bucket Overview Input Secondary Previous Year Total Measure' = [MOD_BIND_SECONDARY_PREVIOUS_YEAR_TOTAL_MEASURE]
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition '_MOD Bucket Overview Inputs' = calculated
+		mode: import
+		source = Row("Column", BLANK())

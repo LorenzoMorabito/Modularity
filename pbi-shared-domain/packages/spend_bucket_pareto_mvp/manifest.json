@@ -1,0 +1,71 @@
+{
+  "moduleId": "spend_bucket_pareto_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic Pareto-style spend bucketing package extracted from the legacy GroupBySpending logic.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_SPEND_MEASURE"
+    ],
+    "coreColumns": [
+      "MOD_BIND_ENTITY_DIMENSION[Value]"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "entity_dimension",
+        "bindingKey": "MOD_BIND_ENTITY_DIMENSION[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Entity Dimension",
+        "description": "Dimension ranked by spend and bucketed into Pareto segments.",
+        "semanticRole": "spend.entity",
+        "defaultValue": "T_DIM_PRODUCT[Product]",
+        "suggestions": [
+          "Product",
+          "Corporation",
+          "Brand",
+          "Country"
+        ]
+      },
+      {
+        "id": "spend_measure",
+        "bindingKey": "MOD_BIND_SPEND_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Spend Measure",
+        "description": "Measure used to rank the entity dimension and compute Pareto buckets.",
+        "semanticRole": "spend.value",
+        "defaultValue": "Promo Spend",
+        "suggestions": [
+          "Promo Spend",
+          "Spending",
+          "Investment",
+          "Values"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Spend Buckets",
+      "MOD Spend Buckets"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Spend Buckets",
+    "hiddenTables": [
+      "_MOD Spend Buckets"
+    ]
+  }
+}
