@@ -1,0 +1,12 @@
+table 'MOD Competitive Benchmark'
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Competitive Benchmark' = calculated
+		mode: import
+		source = Row("Column", BLANK())

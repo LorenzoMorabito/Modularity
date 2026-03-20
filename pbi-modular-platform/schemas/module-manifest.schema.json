@@ -299,7 +299,8 @@
             "flex-flat",
             "flex-pivot",
             "metric-switch",
-            "topn-target-driver"
+            "topn-target-driver",
+            "competitive-benchmark"
           ]
         }
       },

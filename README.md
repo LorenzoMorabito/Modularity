@@ -23,6 +23,7 @@ Package attualmente catalogati:
   - `flex_metrics_table_mvp` `0.2.1`
   - `flex_table_flat_mvp` `0.2.0`
 - shared:
+  - `competitive_benchmark_bundle_mvp` `0.1.0`
   - `period_compare_switch_mvp` `0.1.0`
   - `metric_switch_selector_mvp` `0.1.0`
   - `lag_correlation_explorer_mvp` `0.1.0`

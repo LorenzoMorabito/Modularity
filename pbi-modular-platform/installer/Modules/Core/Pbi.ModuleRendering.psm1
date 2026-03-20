@@ -1267,6 +1267,385 @@ function Get-PbiRenderedTopNDriverSemanticAssets {
     return @($mappings)
 }
 
+function Get-PbiResolvedMeasureBindingIfPresent {
+    param(
+        [Parameter(Mandatory = $true)]$ResolvedMappings,
+        [Parameter(Mandatory = $true)][string]$BindingKey
+    )
+
+    $measureMappings = Get-PbiResolvedMappingSection -ResolvedMappings $ResolvedMappings -SectionName "coreMeasures"
+    $value = ""
+    if ($measureMappings -is [System.Collections.IDictionary]) {
+        foreach ($key in @($measureMappings.Keys)) {
+            if ([string]$key -ne $BindingKey) {
+                continue
+            }
+
+            $value = [string]$measureMappings[$key]
+            break
+        }
+    }
+    elseif ($measureMappings -and $measureMappings.PSObject.Properties[$BindingKey]) {
+        $value = [string]$measureMappings.PSObject.Properties[$BindingKey].Value
+    }
+
+    if ([string]::IsNullOrWhiteSpace($value) -or ($value -eq $BindingKey)) {
+        return ""
+    }
+
+    return $value
+}
+
+function ConvertTo-PbiDaxStringLiteral {
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Value)
+
+    $escapedValue = $Value.Replace('"', '""')
+    return ('"' + $escapedValue + '"')
+}
+
+function Get-PbiCompetitiveBenchmarkPresetBindings {
+    param([Parameter(Mandatory = $true)]$ResolvedMappings)
+
+    $presets = @()
+    foreach ($presetOrdinal in 1..4) {
+        $xBindingKey = ("MOD_BIND_PRESET_{0}_X_MEASURE" -f $presetOrdinal)
+        $yBindingKey = ("MOD_BIND_PRESET_{0}_Y_MEASURE" -f $presetOrdinal)
+        $sizeBindingKey = ("MOD_BIND_PRESET_{0}_SIZE_MEASURE" -f $presetOrdinal)
+
+        $xMeasure = Get-PbiResolvedMeasureBindingIfPresent -ResolvedMappings $ResolvedMappings -BindingKey $xBindingKey
+        $yMeasure = Get-PbiResolvedMeasureBindingIfPresent -ResolvedMappings $ResolvedMappings -BindingKey $yBindingKey
+        $sizeMeasure = Get-PbiResolvedMeasureBindingIfPresent -ResolvedMappings $ResolvedMappings -BindingKey $sizeBindingKey
+
+        if ([string]::IsNullOrWhiteSpace($xMeasure) -or [string]::IsNullOrWhiteSpace($yMeasure) -or [string]::IsNullOrWhiteSpace($sizeMeasure)) {
+            continue
+        }
+
+        $presets += [PSCustomObject]@{
+            Ordinal        = $presetOrdinal
+            XBindingKey    = $xBindingKey
+            YBindingKey    = $yBindingKey
+            SizeBindingKey = $sizeBindingKey
+        }
+    }
+
+    return @($presets)
+}
+
+function New-PbiCompetitiveBenchmarkInputsTemplate {
+    param(
+        [Parameter(Mandatory = $true)]$PresetBindings,
+        [Parameter(Mandatory = $true)]$SelectorMeasureItems
+    )
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD Competitive Benchmark Inputs'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+
+    foreach ($preset in @($PresetBindings)) {
+        $presetOrdinal = [int]$preset.Ordinal
+        $xBindingKey = [string]$preset.XBindingKey
+        $yBindingKey = [string]$preset.YBindingKey
+        $sizeBindingKey = [string]$preset.SizeBindingKey
+
+        $lines.Add(("`tmeasure 'Competitive Benchmark Preset {0} X Input' = [{1}]" -f $presetOrdinal, $xBindingKey))
+        $lines.Add("")
+        $lines.Add(("`tmeasure 'Competitive Benchmark Preset {0} Y Input' = [{1}]" -f $presetOrdinal, $yBindingKey))
+        $lines.Add("")
+        $lines.Add(("`tmeasure 'Competitive Benchmark Preset {0} Size Input' = [{1}]" -f $presetOrdinal, $sizeBindingKey))
+        $lines.Add("")
+    }
+
+    for ($index = 0; $index -lt $SelectorMeasureItems.Count; $index++) {
+        $item = $SelectorMeasureItems[$index]
+        $measureOrdinal = $index + 1
+        $bindingKey = [string]$item.bindingKey
+        $lines.Add(("`tmeasure 'Competitive Benchmark Selector Metric {0}' = [{1}]" -f $measureOrdinal, $bindingKey))
+        $lines.Add("")
+    }
+
+    $lines.Add("`tcolumn Column")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [Column]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD Competitive Benchmark Inputs' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add("`t`tsource = Row(""Column"", BLANK())")
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiCompetitiveBenchmarkMetricSelectorTemplate {
+    param([Parameter(Mandatory = $true)]$SelectorMeasureItems)
+
+    $rows = New-Object System.Collections.Generic.List[string]
+    for ($index = 0; $index -lt $SelectorMeasureItems.Count; $index++) {
+        $item = $SelectorMeasureItems[$index]
+        $measureOrdinal = $index + 1
+        $metricKey = ('metric_{0}' -f $measureOrdinal)
+        $metricLabelLiteral = ConvertTo-PbiDaxStringLiteral -Value (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey))
+        $rows.Add(('{' + (ConvertTo-PbiDaxStringLiteral -Value $metricKey) + ', ' + $metricLabelLiteral + ', ' + $measureOrdinal + '}'))
+    }
+
+    $partitionSource = ('DATATABLE("MetricKey", STRING, "MetricLabel", STRING, "MetricSort", INTEGER, { ' + ($rows -join ", ") + ' })')
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD Competitive Benchmark Metrics'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricKey")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [MetricKey]")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricLabel")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [MetricLabel]")
+    $lines.Add("`t`tsortByColumn: MetricSort")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricSort")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [MetricSort]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD Competitive Benchmark Metrics' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add(("`t`tsource = {0}" -f $partitionSource))
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiCompetitiveBenchmarkPresetTableTemplate {
+    param([Parameter(Mandatory = $true)]$PresetBindings)
+
+    $rows = New-Object System.Collections.Generic.List[string]
+    foreach ($preset in @($PresetBindings)) {
+        $presetOrdinal = [int]$preset.Ordinal
+        $xLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$preset.XBindingKey)
+        $yLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$preset.YBindingKey)
+        $sizeLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$preset.SizeBindingKey)
+        $presetNameLiteral = ConvertTo-PbiDaxStringLiteral -Value ('{0} vs {1}' -f $xLabel, $yLabel)
+        $rows.Add(('{' + $presetOrdinal + ', ' + $presetNameLiteral + ', ' + $presetOrdinal + ', ' + (ConvertTo-PbiDaxStringLiteral -Value $xLabel) + ', ' + (ConvertTo-PbiDaxStringLiteral -Value $yLabel) + ', ' + (ConvertTo-PbiDaxStringLiteral -Value $sizeLabel) + '}'))
+    }
+
+    $partitionSource = ('DATATABLE("PresetKey", INTEGER, "PresetName", STRING, "PresetSort", INTEGER, "XAxisLabel", STRING, "YAxisLabel", STRING, "SizeLabel", STRING, { ' + ($rows -join ", ") + ' })')
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD Competitive Benchmark Presets'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+    $lines.Add("`tcolumn PresetKey")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [PresetKey]")
+    $lines.Add("")
+    $lines.Add("`tcolumn PresetName")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [PresetName]")
+    $lines.Add("`t`tsortByColumn: PresetSort")
+    $lines.Add("")
+    $lines.Add("`tcolumn PresetSort")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [PresetSort]")
+    $lines.Add("")
+    $lines.Add("`tcolumn XAxisLabel")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [XAxisLabel]")
+    $lines.Add("")
+    $lines.Add("`tcolumn YAxisLabel")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [YAxisLabel]")
+    $lines.Add("")
+    $lines.Add("`tcolumn SizeLabel")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [SizeLabel]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD Competitive Benchmark Presets' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add(("`t`tsource = {0}" -f $partitionSource))
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiCompetitiveBenchmarkFacadeTemplate {
+    param(
+        [Parameter(Mandatory = $true)]$PresetBindings,
+        [Parameter(Mandatory = $true)]$SelectorMeasureItems
+    )
+
+    $defaultPreset = @($PresetBindings)[0]
+    $defaultMetric = @($SelectorMeasureItems)[0]
+    $defaultPresetOrdinal = [int]$defaultPreset.Ordinal
+    $defaultPresetName = ('{0} vs {1}' -f (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$defaultPreset.XBindingKey)), (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$defaultPreset.YBindingKey)))
+    $defaultMetricLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$defaultMetric.bindingKey)
+    $defaultPresetNameLiteral = ConvertTo-PbiDaxStringLiteral -Value $defaultPresetName
+    $defaultMetricLabelLiteral = ConvertTo-PbiDaxStringLiteral -Value $defaultMetricLabel
+    $metricSwitchBranches = New-Object System.Collections.Generic.List[string]
+    $scatterXBranches = New-Object System.Collections.Generic.List[string]
+    $scatterYBranches = New-Object System.Collections.Generic.List[string]
+    $scatterSizeBranches = New-Object System.Collections.Generic.List[string]
+
+    for ($index = 0; $index -lt $SelectorMeasureItems.Count; $index++) {
+        $item = $SelectorMeasureItems[$index]
+        $measureOrdinal = $index + 1
+        $metricSwitchBranches.Add(('            "metric_{0}", ''_MOD Competitive Benchmark Inputs''[Competitive Benchmark Selector Metric {1}]' -f $measureOrdinal, $measureOrdinal))
+    }
+
+    foreach ($preset in @($PresetBindings)) {
+        $presetOrdinal = [int]$preset.Ordinal
+        $scatterXBranches.Add(('            {0}, ''_MOD Competitive Benchmark Inputs''[Competitive Benchmark Preset {0} X Input]' -f $presetOrdinal))
+        $scatterYBranches.Add(('            {0}, ''_MOD Competitive Benchmark Inputs''[Competitive Benchmark Preset {0} Y Input]' -f $presetOrdinal))
+        $scatterSizeBranches.Add(('            {0}, ''_MOD Competitive Benchmark Inputs''[Competitive Benchmark Preset {0} Size Input]' -f $presetOrdinal))
+    }
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table 'MOD Competitive Benchmark'")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Selected Preset Key' =")
+    $lines.Add(("`t`tSELECTEDVALUE('_MOD Competitive Benchmark Presets'[PresetKey], {0})" -f $defaultPresetOrdinal))
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Selected Preset Name' =")
+    $lines.Add(("`t`tSELECTEDVALUE('_MOD Competitive Benchmark Presets'[PresetName], {0})" -f $defaultPresetNameLiteral))
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Selected Metric Key' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD Competitive Benchmark Metrics'[MetricKey], ""metric_1"")")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Selected Metric Label' =")
+    $lines.Add(("`t`tSELECTEDVALUE('_MOD Competitive Benchmark Metrics'[MetricLabel], {0})" -f $defaultMetricLabelLiteral))
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Selected Metric Value' =")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [Competitive Benchmark Selected Metric Key],")
+    $lines.Add(($metricSwitchBranches -join ",`r`n"))
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Outputs")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Scatter X' =")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [Competitive Benchmark Selected Preset Key],")
+    $lines.Add(($scatterXBranches -join ",`r`n"))
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Scatter")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Scatter Y' =")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [Competitive Benchmark Selected Preset Key],")
+    $lines.Add(($scatterYBranches -join ",`r`n"))
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Scatter")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Scatter Size' =")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [Competitive Benchmark Selected Preset Key],")
+    $lines.Add(($scatterSizeBranches -join ",`r`n"))
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Scatter")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Scatter Size Safe' =")
+    $lines.Add("`t`tVAR X = [Competitive Benchmark Scatter Size]")
+    $lines.Add("`t`tRETURN IF(ISBLANK(X), -1e99, X)")
+    $lines.Add("`t`tdisplayFolder: Scatter")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Scatter X Label' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD Competitive Benchmark Presets'[XAxisLabel])")
+    $lines.Add("`t`tdisplayFolder: Scatter")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Scatter Y Label' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD Competitive Benchmark Presets'[YAxisLabel])")
+    $lines.Add("`t`tdisplayFolder: Scatter")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Scatter Size Label' =")
+    $lines.Add("`t`tVAR Label = SELECTEDVALUE('_MOD Competitive Benchmark Presets'[SizeLabel])")
+    $lines.Add("`t`tRETURN IF(ISBLANK(Label), BLANK(), ""Size: "" & Label)")
+    $lines.Add("`t`tdisplayFolder: Scatter")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Title' =")
+    $lines.Add("`t`t[Competitive Benchmark Selected Preset Name] & "" | "" & [Competitive Benchmark Selected Metric Label]")
+    $lines.Add("`t`tdisplayFolder: Presentation")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Preset Count' = " + $PresetBindings.Count)
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Diagnostics")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Competitive Benchmark Metric Count' = " + $SelectorMeasureItems.Count)
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Diagnostics")
+    $lines.Add("")
+    $lines.Add("`tcolumn Column")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [Column]")
+    $lines.Add("")
+    $lines.Add("`tpartition 'MOD Competitive Benchmark' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add("`t`tsource = Row(""Column"", BLANK())")
+
+    return (($lines -join "`r`n") + "`r`n")
+}
+
+function Get-PbiRenderedCompetitiveBenchmarkSemanticAssets {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [Parameter(Mandatory = $true)]$Module,
+        [Parameter(Mandatory = $true)]$Manifest,
+        [Parameter(Mandatory = $true)]$ResolvedMappings
+    )
+
+    $presetBindings = @(Get-PbiCompetitiveBenchmarkPresetBindings -ResolvedMappings $ResolvedMappings)
+    $selectorMeasureItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "selector_measures")
+
+    if ($presetBindings.Count -eq 0) {
+        throw "Competitive benchmark rendering requires at least one complete preset binding."
+    }
+
+    if ($selectorMeasureItems.Count -eq 0) {
+        throw "Competitive benchmark rendering requires at least one selector measure."
+    }
+
+    $tableTemplates = [ordered]@{
+        "_MOD Competitive Benchmark Inputs"  = (New-PbiCompetitiveBenchmarkInputsTemplate -PresetBindings $presetBindings -SelectorMeasureItems $selectorMeasureItems)
+        "_MOD Competitive Benchmark Metrics" = (New-PbiCompetitiveBenchmarkMetricSelectorTemplate -SelectorMeasureItems $selectorMeasureItems)
+        "_MOD Competitive Benchmark Presets" = (New-PbiCompetitiveBenchmarkPresetTableTemplate -PresetBindings $presetBindings)
+        "MOD Competitive Benchmark"          = (New-PbiCompetitiveBenchmarkFacadeTemplate -PresetBindings $presetBindings -SelectorMeasureItems $selectorMeasureItems)
+    }
+
+    $mappings = @()
+    foreach ($tableName in @($Manifest.provides.semanticTables)) {
+        $destinationPath = Get-PbiTableDefinitionPath -Project $Project -TableName $tableName
+        $sourcePath = Join-Path (Join-Path $Module.PackageRoot "semantic") ($tableName + ".tmdl")
+        $renderedContent = Convert-PbiTextWithResolvedMappings -Text $tableTemplates[$tableName] -ResolvedMappings $ResolvedMappings
+        $mappings += (New-PbiRenderedModuleFileMapping -TableName $tableName -SourcePath $sourcePath -DestinationPath $destinationPath -RelativePath (Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path $destinationPath) -SourceContent $renderedContent)
+    }
+
+    return @($mappings)
+}
+
 function Get-PbiRenderedModuleSemanticAssets {
     param(
         [Parameter(Mandatory = $true)]$Project,
@@ -1284,6 +1663,7 @@ function Get-PbiRenderedModuleSemanticAssets {
         "flex-pivot" { return @(Get-PbiRenderedFlexPivotSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         "metric-switch" { return @(Get-PbiRenderedMetricSwitchSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         "topn-target-driver" { return @(Get-PbiRenderedTopNDriverSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
+        "competitive-benchmark" { return @(Get-PbiRenderedCompetitiveBenchmarkSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         default { return @() }
     }
 }

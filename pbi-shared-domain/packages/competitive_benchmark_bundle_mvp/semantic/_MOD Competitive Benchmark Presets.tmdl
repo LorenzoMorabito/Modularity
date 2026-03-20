@@ -1,0 +1,39 @@
+table '_MOD Competitive Benchmark Presets'
+	isHidden
+
+	column PresetKey
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [PresetKey]
+
+	column PresetName
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [PresetName]
+
+	column PresetSort
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [PresetSort]
+
+	column XAxisLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [XAxisLabel]
+
+	column YAxisLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [YAxisLabel]
+
+	column SizeLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [SizeLabel]
+
+	partition '_MOD Competitive Benchmark Presets' = calculated
+		mode: import
+		source = DATATABLE("PresetKey", INTEGER, "PresetName", STRING, "PresetSort", INTEGER, "XAxisLabel", STRING, "YAxisLabel", STRING, "SizeLabel", STRING, {{1, "TODO", 1, "TODO", "TODO", "TODO"}})

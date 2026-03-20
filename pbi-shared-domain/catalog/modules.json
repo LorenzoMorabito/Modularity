@@ -2,6 +2,16 @@
   "domain": "shared",
   "packages": [
     {
+      "moduleId": "competitive_benchmark_bundle_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/competitive_benchmark_bundle_mvp",
+      "displayName": "Competitive Benchmark Bundle MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-benchmark-measures"
+      ]
+    },
+    {
       "moduleId": "lag_correlation_explorer_mvp",
       "version": "0.1.0",
       "status": "experimental",

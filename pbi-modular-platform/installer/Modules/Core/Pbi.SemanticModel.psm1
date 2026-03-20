@@ -248,8 +248,9 @@ function Test-PbiModuleRequirements {
             $mappingSection = Get-PbiResolvedMappingSection -ResolvedMappings $normalizedMappings -SectionName $sectionName
             $hasMapping = [bool]($mappingSection -and $mappingSection.Contains($role.bindingKey))
             $resolvedValue = if ($hasMapping) { [string]$mappingSection[$role.bindingKey] } else { "" }
+            $isSelfPlaceholder = [string]::Equals($resolvedValue, [string]$role.bindingKey, [System.StringComparison]::OrdinalIgnoreCase)
 
-            if ($hasMapping -and -not [string]::IsNullOrWhiteSpace($resolvedValue)) {
+            if ($hasMapping -and -not [string]::IsNullOrWhiteSpace($resolvedValue) -and (-not $isSelfPlaceholder)) {
                 if ($role.kind -eq "measure") {
                     $measureRequirements += [ordered]@{
                         source = [string]$role.bindingKey

@@ -162,7 +162,7 @@ function New-PbiNormalizedBindingRole {
         description                  = if ($Role.description) { [string]$Role.description } else { ("Map '{0}'." -f $bindingKey) }
         semanticRole                 = if ($Role.semanticRole) { [string]$Role.semanticRole } else { "" }
         suggestions                  = @($Role.suggestions)
-        defaultValue                 = if ($null -ne $Role.defaultValue) { [string]$Role.defaultValue } else { $bindingKey }
+        defaultValue                 = if ($null -ne $Role.defaultValue) { [string]$Role.defaultValue } elseif (($null -ne $Role.required) -and (-not [bool]$Role.required)) { "" } else { $bindingKey }
         collectionId                 = if ($Role.collectionId) { [string]$Role.collectionId } else { "" }
         collectionLabel              = if ($Role.collectionLabel) { [string]$Role.collectionLabel } else { "" }
         collectionItemLabel          = if ($Role.collectionItemLabel) { [string]$Role.collectionItemLabel } else { "" }

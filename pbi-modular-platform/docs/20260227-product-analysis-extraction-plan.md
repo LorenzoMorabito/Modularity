@@ -52,6 +52,9 @@ These areas are valid package candidates but are still more intertwined at repor
    - scatter preset engine
    - entity focus selector
    - time trend companion visuals
+   Status:
+   - semantic-first extraction implemented
+   - smoke-install validated on sandbox consumer
 
 2. `topn_target_driver_bundle_mvp`
    Combines:

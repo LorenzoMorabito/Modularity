@@ -1,0 +1,311 @@
+{
+  "moduleId": "competitive_benchmark_bundle_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic competitive benchmark bundle with scatter presets and benchmark metric selector extracted from the legacy competitive comparison views.",
+  "requires": {
+    "coreMeasures": [],
+    "coreColumns": []
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "preset_1_x_measure",
+        "bindingKey": "MOD_BIND_PRESET_1_X_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Preset 1 X Measure",
+        "description": "Measure used on the X axis for benchmark preset 1.",
+        "semanticRole": "benchmark.preset.1.x",
+        "defaultValue": "Sales Values MS%",
+        "suggestions": [
+          "Sales Values MS%",
+          "Share",
+          "X Axis"
+        ]
+      },
+      {
+        "id": "preset_1_y_measure",
+        "bindingKey": "MOD_BIND_PRESET_1_Y_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Preset 1 Y Measure",
+        "description": "Measure used on the Y axis for benchmark preset 1.",
+        "semanticRole": "benchmark.preset.1.y",
+        "defaultValue": "Promo SOV%",
+        "suggestions": [
+          "Promo SOV%",
+          "Growth",
+          "Y Axis"
+        ]
+      },
+      {
+        "id": "preset_1_size_measure",
+        "bindingKey": "MOD_BIND_PRESET_1_SIZE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Preset 1 Size Measure",
+        "description": "Measure used as point size for benchmark preset 1.",
+        "semanticRole": "benchmark.preset.1.size",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "Size"
+        ]
+      },
+      {
+        "id": "preset_2_x_measure",
+        "bindingKey": "MOD_BIND_PRESET_2_X_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Preset 2 X Measure",
+        "description": "Measure used on the X axis for benchmark preset 2.",
+        "semanticRole": "benchmark.preset.2.x",
+        "defaultValue": "Promo ESOV",
+        "suggestions": [
+          "Promo ESOV",
+          "ESOV",
+          "X Axis"
+        ]
+      },
+      {
+        "id": "preset_2_y_measure",
+        "bindingKey": "MOD_BIND_PRESET_2_Y_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Preset 2 Y Measure",
+        "description": "Measure used on the Y axis for benchmark preset 2.",
+        "semanticRole": "benchmark.preset.2.y",
+        "defaultValue": "Sales Values MS%",
+        "suggestions": [
+          "Sales Values MS%",
+          "Share",
+          "Y Axis"
+        ]
+      },
+      {
+        "id": "preset_2_size_measure",
+        "bindingKey": "MOD_BIND_PRESET_2_SIZE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Preset 2 Size Measure",
+        "description": "Measure used as point size for benchmark preset 2.",
+        "semanticRole": "benchmark.preset.2.size",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "Size"
+        ]
+      },
+      {
+        "id": "preset_3_x_measure",
+        "bindingKey": "MOD_BIND_PRESET_3_X_MEASURE",
+        "kind": "measure",
+        "required": false,
+        "label": "Preset 3 X Measure",
+        "description": "Optional X axis measure for benchmark preset 3.",
+        "semanticRole": "benchmark.preset.3.x",
+        "suggestions": [
+          "X Axis",
+          "Share",
+          "Index"
+        ]
+      },
+      {
+        "id": "preset_3_y_measure",
+        "bindingKey": "MOD_BIND_PRESET_3_Y_MEASURE",
+        "kind": "measure",
+        "required": false,
+        "label": "Preset 3 Y Measure",
+        "description": "Optional Y axis measure for benchmark preset 3.",
+        "semanticRole": "benchmark.preset.3.y",
+        "suggestions": [
+          "Y Axis",
+          "Value",
+          "Rate"
+        ]
+      },
+      {
+        "id": "preset_3_size_measure",
+        "bindingKey": "MOD_BIND_PRESET_3_SIZE_MEASURE",
+        "kind": "measure",
+        "required": false,
+        "label": "Preset 3 Size Measure",
+        "description": "Optional size measure for benchmark preset 3.",
+        "semanticRole": "benchmark.preset.3.size",
+        "suggestions": [
+          "Size",
+          "Weight",
+          "Values"
+        ]
+      },
+      {
+        "id": "preset_4_x_measure",
+        "bindingKey": "MOD_BIND_PRESET_4_X_MEASURE",
+        "kind": "measure",
+        "required": false,
+        "label": "Preset 4 X Measure",
+        "description": "Optional X axis measure for benchmark preset 4.",
+        "semanticRole": "benchmark.preset.4.x",
+        "suggestions": [
+          "X Axis",
+          "Rate",
+          "Index"
+        ]
+      },
+      {
+        "id": "preset_4_y_measure",
+        "bindingKey": "MOD_BIND_PRESET_4_Y_MEASURE",
+        "kind": "measure",
+        "required": false,
+        "label": "Preset 4 Y Measure",
+        "description": "Optional Y axis measure for benchmark preset 4.",
+        "semanticRole": "benchmark.preset.4.y",
+        "suggestions": [
+          "Y Axis",
+          "Score",
+          "Rate"
+        ]
+      },
+      {
+        "id": "preset_4_size_measure",
+        "bindingKey": "MOD_BIND_PRESET_4_SIZE_MEASURE",
+        "kind": "measure",
+        "required": false,
+        "label": "Preset 4 Size Measure",
+        "description": "Optional size measure for benchmark preset 4.",
+        "semanticRole": "benchmark.preset.4.size",
+        "suggestions": [
+          "Size",
+          "Weight",
+          "Calls"
+        ]
+      }
+    ],
+    "collections": [
+      {
+        "id": "selector_measures",
+        "kind": "measure",
+        "label": "Benchmark Measures",
+        "description": "Choose the benchmark metrics available in the comparison selector.",
+        "itemLabel": "Measure",
+        "minItems": 1,
+        "maxItems": 8,
+        "defaultVisibleCount": 4,
+        "bindingKeyPrefix": "MOD_BIND_SELECTOR_MEASURE_",
+        "defaultItems": [
+          {
+            "label": "Measure 1",
+            "description": "Primary benchmark metric.",
+            "defaultValue": "Sales Values",
+            "suggestions": [
+              "Sales Values",
+              "Values",
+              "Revenue"
+            ]
+          },
+          {
+            "label": "Measure 2",
+            "description": "Secondary benchmark metric.",
+            "defaultValue": "Sales Units",
+            "suggestions": [
+              "Sales Units",
+              "Units",
+              "Volume"
+            ]
+          },
+          {
+            "label": "Measure 3",
+            "description": "Additional benchmark metric.",
+            "defaultValue": "Promo Spend",
+            "suggestions": [
+              "Promo Spend",
+              "Spend",
+              "Investment"
+            ]
+          },
+          {
+            "label": "Measure 4",
+            "description": "Additional benchmark metric.",
+            "defaultValue": "Promo Contacts",
+            "suggestions": [
+              "Promo Contacts",
+              "Contacts",
+              "Calls"
+            ]
+          },
+          {
+            "label": "Measure 5",
+            "description": "Additional benchmark metric.",
+            "defaultValue": "ACT Mth",
+            "suggestions": [
+              "ACT Mth",
+              "Actual",
+              "ACT"
+            ]
+          },
+          {
+            "label": "Measure 6",
+            "description": "Additional benchmark metric.",
+            "defaultValue": "BDG Mth",
+            "suggestions": [
+              "BDG Mth",
+              "Budget",
+              "BDG"
+            ]
+          },
+          {
+            "label": "Measure 7",
+            "description": "Additional benchmark metric.",
+            "defaultValue": "Previous Year",
+            "suggestions": [
+              "Previous Year",
+              "PY",
+              "Prior Year"
+            ]
+          },
+          {
+            "label": "Measure 8",
+            "description": "Additional benchmark metric.",
+            "defaultValue": "Investments",
+            "suggestions": [
+              "Investments",
+              "Spend",
+              "Value"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "rendering": {
+    "strategy": "competitive-benchmark"
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Competitive Benchmark Inputs",
+      "_MOD Competitive Benchmark Metrics",
+      "_MOD Competitive Benchmark Presets",
+      "MOD Competitive Benchmark"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Competitive Benchmark",
+    "hiddenTables": [
+      "_MOD Competitive Benchmark Inputs",
+      "_MOD Competitive Benchmark Metrics",
+      "_MOD Competitive Benchmark Presets"
+    ]
+  }
+}
