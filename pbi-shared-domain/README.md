@@ -12,3 +12,5 @@ Area di dominio per i package semantic generalisti e cross-schema.
 ## Obiettivo
 
 Questa area raccoglie i package derivati da logiche reusable che non devono dipendere da naming o schema specifici `finance`, `sales` o `promo`.
+
+Ogni package installabile della cartella `packages/` include una scheda `PACKAGE.md` per funzionalita, binding, limiti e installazione corretta.

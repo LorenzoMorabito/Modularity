@@ -15,9 +15,11 @@ Area di dominio per i package marketing e per l'eventuale futura estrazione di c
 
 Package attivi:
 
-- `flex_metrics_table_mvp` `0.2.1`
-- `flex_table_flat_mvp` `0.2.0`
+- `flex_metrics_table_mvp` `0.4.2`
+- `flex_table_flat_mvp` `0.4.2`
 
 I progetti `Product Analysis` attivi non vivono piu in root: sono stati consolidati sotto `powerbi-projects`.
 
 La migrazione di eventuali consumer marketing dentro questa area non e ancora stata eseguita.
+
+Ogni package installabile della cartella `packages/` include una scheda `PACKAGE.md` per funzionalita, binding, limiti e installazione corretta.

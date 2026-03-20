@@ -9,4 +9,6 @@ Questa cartella contiene i package source riusabili del dominio finance.
 
 I package qui presenti sono la fonte autorevole di authoring.
 
+Ogni package installabile espone una scheda `PACKAGE.md` con funzionalita, parametri di binding, limiti e procedura di installazione.
+
 Le copie installate nei consumer restano artefatti gestiti separatamente sotto `powerbi-projects`.

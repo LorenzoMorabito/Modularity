@@ -1,6 +1,6 @@
 # Finance Compare MVP
 
-Versione corrente: `0.1.0`
+Versione corrente: `0.2.2`
 
 Primo package finance importabile del workspace.
 
@@ -27,3 +27,5 @@ Repository role:
 
 Current validated consumers:
 - `powerbi-projects/20260317_UAT_001.pbip`
+
+Per installazione, parametri di binding, limiti e procedura operativa usare anche `PACKAGE.md`.

@@ -1,6 +1,6 @@
 # FlexTableFlat MVP
 
-Versione corrente: `0.2.0`
+Versione corrente: `0.4.2`
 
 Flat-table companion module for the existing pivot-style flex table.
 
@@ -59,3 +59,5 @@ Notes:
 Current validated consumers:
 - `powerbi-projects/20260317_Product_Analysis_FlexTable.pbip`
 - `powerbi-projects/20260317_UAT_001.pbip`
+
+Per installazione, parametri di binding, limiti e procedura operativa usare anche `PACKAGE.md`.

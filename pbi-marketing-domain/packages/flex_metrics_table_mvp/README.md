@@ -1,6 +1,6 @@
 # Flex Metrics Table MVP
 
-Versione corrente: `0.2.1`
+Versione corrente: `0.4.2`
 
 First marketing-domain table module built as an importable package.
 
@@ -51,3 +51,5 @@ Notes:
 Current validated consumers:
 - `powerbi-projects/20260317_Product_Analysis_FlexTable.pbip`
 - `powerbi-projects/20260317_UAT_001.pbip`
+
+Per installazione, parametri di binding, limiti e procedura operativa usare anche `PACKAGE.md`.

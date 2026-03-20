@@ -18,10 +18,10 @@ Questa area raccoglie tutto cio che riguarda l'authoring modulare e la platform 
 Package attualmente catalogati:
 
 - finance:
-  - `finance_compare_mvp` `0.1.0`
+  - `finance_compare_mvp` `0.2.2`
 - marketing:
-  - `flex_metrics_table_mvp` `0.2.1`
-  - `flex_table_flat_mvp` `0.2.0`
+  - `flex_metrics_table_mvp` `0.4.2`
+  - `flex_table_flat_mvp` `0.4.2`
 - shared:
   - `bucketed_overview_matrix_bundle_mvp` `0.1.0`
   - `bucket_metric_family_bundle_mvp` `0.1.0`
@@ -52,6 +52,15 @@ Capabilita oggi operative della platform:
 - `smoke-install`
 - `Invoke-PbiModularity.ps1` wrapper CLI
 - generator `new-module`
+
+## Documentazione package
+
+Ogni package installabile deve esporre una scheda locale `PACKAGE.md` nella propria cartella con:
+
+- funzionalita e limiti del modulo
+- binding e parametri richiesti
+- asset installati nel consumer
+- procedura corretta di validazione, installazione e test
 
 ## Regola operativa
 
