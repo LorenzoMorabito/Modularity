@@ -1,0 +1,131 @@
+{
+  "moduleId": "metric_switch_selector_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic collection-based metric selector extracted from the legacy sales, promo, and competitive measure switch tables.",
+  "requires": {
+    "coreMeasures": [],
+    "coreColumns": []
+  },
+  "bindingContract": {
+    "mode": "collection-guided",
+    "collections": [
+      {
+        "id": "measures",
+        "kind": "measure",
+        "label": "Measures",
+        "description": "Choose the measures exposed by the selector.",
+        "itemLabel": "Measure",
+        "minItems": 1,
+        "maxItems": 8,
+        "defaultVisibleCount": 3,
+        "bindingKeyPrefix": "MOD_BIND_MEASURE_",
+        "defaultItems": [
+          {
+            "label": "Measure 1",
+            "description": "Primary selectable metric.",
+            "defaultValue": "Sales Values",
+            "suggestions": [
+              "Sales Values",
+              "Values",
+              "Revenue"
+            ]
+          },
+          {
+            "label": "Measure 2",
+            "description": "Secondary selectable metric.",
+            "defaultValue": "Promo Spend",
+            "suggestions": [
+              "Promo Spend",
+              "Spend",
+              "Investment"
+            ]
+          },
+          {
+            "label": "Measure 3",
+            "description": "Third selectable metric.",
+            "defaultValue": "Sales Units",
+            "suggestions": [
+              "Sales Units",
+              "Units",
+              "Volume"
+            ]
+          },
+          {
+            "label": "Measure 4",
+            "description": "Additional selectable metric.",
+            "defaultValue": "Fin ACT",
+            "suggestions": [
+              "Fin ACT",
+              "Actual",
+              "ACT"
+            ]
+          },
+          {
+            "label": "Measure 5",
+            "description": "Additional selectable metric.",
+            "defaultValue": "Fin BDG",
+            "suggestions": [
+              "Fin BDG",
+              "Budget",
+              "BDG"
+            ]
+          },
+          {
+            "label": "Measure 6",
+            "description": "Additional selectable metric.",
+            "defaultValue": "Fin ACT PY",
+            "suggestions": [
+              "Fin ACT PY",
+              "Previous Year",
+              "PY"
+            ]
+          },
+          {
+            "label": "Measure 7",
+            "description": "Additional selectable metric.",
+            "defaultValue": "Promo Contacts",
+            "suggestions": [
+              "Promo Contacts",
+              "Contacts",
+              "Calls"
+            ]
+          },
+          {
+            "label": "Measure 8",
+            "description": "Additional selectable metric.",
+            "defaultValue": "Promo Details",
+            "suggestions": [
+              "Promo Details",
+              "Details",
+              "Detailing"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "rendering": {
+    "strategy": "metric-switch"
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Metric Switch Inputs",
+      "MOD Metric Switch"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Metric Switch",
+    "hiddenTables": [
+      "_MOD Metric Switch Inputs"
+    ]
+  }
+}

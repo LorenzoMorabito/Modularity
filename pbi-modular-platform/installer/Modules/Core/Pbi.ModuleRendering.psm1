@@ -557,6 +557,96 @@ function Get-PbiFlexFlatTableVisualContent {
     return (ConvertTo-PbiJsonText -InputObject $visual)
 }
 
+function New-PbiMetricSwitchInputsTemplate {
+    param([Parameter(Mandatory = $true)]$MeasureItems)
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD Metric Switch Inputs'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+
+    for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
+        $item = $MeasureItems[$index]
+        $measureOrdinal = $index + 1
+        $lines.Add(("`tmeasure 'Metric Switch Input Metric {0}' = [{1}]" -f $measureOrdinal, $item.bindingKey))
+        $lines.Add("")
+    }
+
+    $lines.Add("`tcolumn Column")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [Column]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD Metric Switch Inputs' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add("`t`tsource = Row(""Column"", BLANK())")
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiMetricSwitchFacadeTemplate {
+    param([Parameter(Mandatory = $true)]$MeasureItems)
+
+    $selectorRows = New-Object System.Collections.Generic.List[string]
+    $switchBranches = New-Object System.Collections.Generic.List[string]
+
+    for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
+        $item = $MeasureItems[$index]
+        $measureOrdinal = $index + 1
+        $selectorRows.Add(('{{"metric_{0}", "{1}", {2}}}' -f $measureOrdinal, (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)), $measureOrdinal))
+        $switchBranches.Add(('                "metric_{0}", ''_MOD Metric Switch Inputs''[Metric Switch Input Metric {1}]' -f $measureOrdinal, $measureOrdinal))
+    }
+
+    $partitionSource = ('DATATABLE("MetricKey", STRING, "MetricLabel", STRING, "SortOrder", INTEGER, {{ {0} }})' -f ($selectorRows -join ", "))
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table 'MOD Metric Switch'")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Metric Switch Selected Value' =")
+    $lines.Add("`t`t`t")
+    $lines.Add("`t`t`tSWITCH(")
+    $lines.Add("`t`t`t    SELECTEDVALUE('MOD Metric Switch'[MetricKey], ""metric_1""),")
+    $lines.Add(($switchBranches -join ",`r`n"))
+    $lines.Add("`t`t`t)")
+    $lines.Add("`t`tdisplayFolder: Outputs")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Metric Switch Selected Label' =")
+    $lines.Add("`t`t`t")
+    $lines.Add(("`t`t`tSELECTEDVALUE('MOD Metric Switch'[MetricLabel], ""{0}"")" -f (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$MeasureItems[0].bindingKey))))
+    $lines.Add("`t`tdisplayFolder: Presentation")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'Metric Switch Metric Count' = " + $MeasureItems.Count)
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Diagnostics")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricKey")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [MetricKey]")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricLabel")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [MetricLabel]")
+    $lines.Add("`t`tsortByColumn: SortOrder")
+    $lines.Add("")
+    $lines.Add("`tcolumn SortOrder")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [SortOrder]")
+    $lines.Add("")
+    $lines.Add("`tpartition 'MOD Metric Switch' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add(("`t`tsource = {0}" -f $partitionSource))
+
+    return ($lines -join "`r`n")
+}
+
 function Get-PbiFlexPivotDimensionSlicerContent {
     param(
         [Parameter(Mandatory = $true)][string]$TemplateContent,
@@ -701,6 +791,31 @@ function Get-PbiRenderedFlexPivotReportAssets {
         })
 }
 
+function Get-PbiRenderedMetricSwitchSemanticAssets {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [Parameter(Mandatory = $true)]$Module,
+        [Parameter(Mandatory = $true)]$Manifest,
+        [Parameter(Mandatory = $true)]$ResolvedMappings
+    )
+
+    $measureItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "measures")
+    $tableTemplates = [ordered]@{
+        "_MOD Metric Switch Inputs" = (New-PbiMetricSwitchInputsTemplate -MeasureItems $measureItems)
+        "MOD Metric Switch"         = (New-PbiMetricSwitchFacadeTemplate -MeasureItems $measureItems)
+    }
+
+    $mappings = @()
+    foreach ($tableName in @($Manifest.provides.semanticTables)) {
+        $destinationPath = Get-PbiTableDefinitionPath -Project $Project -TableName $tableName
+        $sourcePath = Join-Path (Join-Path $Module.PackageRoot "semantic") ($tableName + ".tmdl")
+        $renderedContent = Convert-PbiTextWithResolvedMappings -Text $tableTemplates[$tableName] -ResolvedMappings $ResolvedMappings
+        $mappings += (New-PbiRenderedModuleFileMapping -TableName $tableName -SourcePath $sourcePath -DestinationPath $destinationPath -RelativePath (Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path $destinationPath) -SourceContent $renderedContent)
+    }
+
+    return @($mappings)
+}
+
 function Get-PbiRenderedModuleSemanticAssets {
     param(
         [Parameter(Mandatory = $true)]$Project,
@@ -716,6 +831,7 @@ function Get-PbiRenderedModuleSemanticAssets {
     switch (Get-PbiModuleRenderingStrategy -Manifest $Manifest) {
         "flex-flat" { return @(Get-PbiRenderedFlexFlatSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         "flex-pivot" { return @(Get-PbiRenderedFlexPivotSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
+        "metric-switch" { return @(Get-PbiRenderedMetricSwitchSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         default { return @() }
     }
 }

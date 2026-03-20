@@ -264,7 +264,8 @@ function Get-PbiRenderedModuleReportIssues {
     param([Parameter(Mandatory = $true)]$Module)
 
     $results = New-Object System.Collections.Generic.List[object]
-    if (-not $Module.Manifest.provides.reportPage) {
+    $reportPage = if ($Module.Manifest.provides.PSObject.Properties['reportPage']) { $Module.Manifest.provides.reportPage } else { $null }
+    if (-not $reportPage) {
         return $results.ToArray()
     }
 

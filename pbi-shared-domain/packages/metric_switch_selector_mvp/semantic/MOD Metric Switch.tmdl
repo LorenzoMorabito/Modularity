@@ -1,0 +1,24 @@
+table 'MOD Metric Switch'
+
+	column MetricKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricKey]
+
+	column MetricLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricLabel]
+		sortByColumn: SortOrder
+
+	column SortOrder
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [SortOrder]
+
+	partition 'MOD Metric Switch' = calculated
+		mode: import
+		source = DATATABLE("MetricKey", STRING, "MetricLabel", STRING, "SortOrder", INTEGER, {{"metric_1", "TODO", 1}})

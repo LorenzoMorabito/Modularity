@@ -1,0 +1,35 @@
+{
+  "domain": "shared",
+  "packages": [
+    {
+      "moduleId": "lag_correlation_explorer_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/lag_correlation_explorer_mvp",
+      "displayName": "Lag Correlation Explorer MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-date-axis"
+      ]
+    },
+    {
+      "moduleId": "metric_switch_selector_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/metric_switch_selector_mvp",
+      "displayName": "Metric Switch Selector MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model"
+      ]
+    },
+    {
+      "moduleId": "period_compare_switch_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/period_compare_switch_mvp",
+      "displayName": "Period Compare Switch MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model"
+      ]
+    }
+  ]
+}

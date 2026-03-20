@@ -1,0 +1,92 @@
+{
+  "moduleId": "lag_correlation_explorer_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic lag and correlation exploration package extracted from the legacy Product Analysis lag-selection logic.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_DRIVER_MEASURE",
+      "MOD_BIND_RESPONSE_MEASURE"
+    ],
+    "coreColumns": [
+      "MOD_BIND_PERIOD_AXIS[Value]"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "driver_measure",
+        "bindingKey": "MOD_BIND_DRIVER_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Driver Measure",
+        "description": "Metric treated as the lagged driver series.",
+        "semanticRole": "lag.driver",
+        "defaultValue": "Promo Spend",
+        "suggestions": [
+          "Promo Spend",
+          "Spend",
+          "Investment",
+          "Driver"
+        ]
+      },
+      {
+        "id": "response_measure",
+        "bindingKey": "MOD_BIND_RESPONSE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Response Measure",
+        "description": "Metric treated as the response series.",
+        "semanticRole": "lag.response",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "Response",
+          "Outcome"
+        ]
+      },
+      {
+        "id": "period_axis",
+        "bindingKey": "MOD_BIND_PERIOD_AXIS[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Period Axis",
+        "description": "Ordered date column used for lag shifting and correlation windows.",
+        "semanticRole": "calendar.period",
+        "defaultValue": "T_DIM_QUARTER[QuarterStartDay]",
+        "suggestions": [
+          "QuarterStartDay",
+          "MonthStartDay",
+          "Date",
+          "Period"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Lag Explorer Inputs",
+      "_MOD Lag Explorer Lambda",
+      "_MOD Lag Explorer MaxLag",
+      "MOD Lag Explorer"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Lag Explorer",
+    "hiddenTables": [
+      "_MOD Lag Explorer Inputs",
+      "_MOD Lag Explorer Lambda",
+      "_MOD Lag Explorer MaxLag"
+    ]
+  }
+}

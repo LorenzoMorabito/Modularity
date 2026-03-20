@@ -1,0 +1,20 @@
+table '_MOD Lag Explorer Lambda'
+	isHidden
+
+	column Value
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition '_MOD Lag Explorer Lambda' = calculated
+		mode: import
+		source = ```
+				DATATABLE(
+				    "Value", DOUBLE,
+				    {
+				        {0.20},
+				        {0.50},
+				        {0.80}
+				    }
+				)
+				```

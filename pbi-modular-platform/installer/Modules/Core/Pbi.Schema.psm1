@@ -217,7 +217,7 @@ function Test-PbiModuleManifestContract {
 
     $errors = New-Object System.Collections.Generic.List[object]
     $semanticTables = @($Manifest.provides.semanticTables)
-    $reportPage = $Manifest.provides.reportPage
+    $reportPage = if ($Manifest.provides.PSObject.Properties['reportPage']) { $Manifest.provides.reportPage } else { $null }
     $semanticUx = if ($Manifest.PSObject.Properties['semanticUx']) { $Manifest.semanticUx } else { $null }
 
     if ($Manifest.type -eq "report-only") {

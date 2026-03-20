@@ -40,7 +40,8 @@ function Get-PbiModuleSnapshotPlan {
     }
 
     $currentPage = if ($StateRecord) { $StateRecord.installedObjects.page } else { "" }
-    $targetPage = if ($Module.Manifest.provides.reportPage) { $Module.Manifest.provides.reportPage.name } else { "" }
+    $moduleReportPage = if ($Module.Manifest.provides.PSObject.Properties['reportPage']) { $Module.Manifest.provides.reportPage } else { $null }
+    $targetPage = if ($moduleReportPage) { $moduleReportPage.name } else { "" }
     if ((-not [string]::IsNullOrWhiteSpace($currentPage)) -or (-not [string]::IsNullOrWhiteSpace($targetPage))) {
         $filePaths.Add((Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path (Get-PbiPagesMetadataPath -Project $Project)))
     }
@@ -298,11 +299,13 @@ function Reset-PbiModuleInstallationInProject {
     if ($StateRecord) {
         $pageName = $StateRecord.installedObjects.page
     }
-    elseif ($Module -and $Module.Manifest.provides.reportPage) {
+    elseif ($Module -and $Module.Manifest.provides.PSObject.Properties['reportPage']) {
         $pageName = $Module.Manifest.provides.reportPage.name
     }
 
-    Remove-PbiModulePageFromProject -Project $Project -PageName $pageName
+    if (-not [string]::IsNullOrWhiteSpace($pageName)) {
+        Remove-PbiModulePageFromProject -Project $Project -PageName $pageName
+    }
 
     $state = Get-PbiInstalledModulesState -Project $Project
     $state = Remove-PbiInstalledModuleRecord -State $state -ModuleId $ModuleId
@@ -360,7 +363,8 @@ function Get-PbiModuleDiffData {
     if ((@($StateRecord.installedObjects.tables).Count -gt 0) -or (@($Module.Manifest.provides.semanticTables).Count -gt 0)) {
         $sharedPaths.Add((Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path (Get-PbiModelPath -Project $Project)))
     }
-    if ((-not [string]::IsNullOrWhiteSpace($StateRecord.installedObjects.page)) -or $Module.Manifest.provides.reportPage) {
+    $moduleReportPage = if ($Module.Manifest.provides.PSObject.Properties['reportPage']) { $Module.Manifest.provides.reportPage } else { $null }
+    if ((-not [string]::IsNullOrWhiteSpace($StateRecord.installedObjects.page)) -or $moduleReportPage) {
         $sharedPaths.Add((Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path (Get-PbiPagesMetadataPath -Project $Project)))
     }
 

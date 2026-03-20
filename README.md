@@ -8,6 +8,8 @@ Questa area raccoglie tutto cio che riguarda l'authoring modulare e la platform 
   Domain source per i package finance.
 - [pbi-marketing-domain](./pbi-marketing-domain)
   Domain source per i package marketing.
+- [pbi-shared-domain](./pbi-shared-domain)
+  Domain source per i package semantic generalisti e cross-schema.
 - [pbi-modular-platform](./pbi-modular-platform)
   Installer, quality checks, schemi e documentazione lifecycle.
 
@@ -20,6 +22,10 @@ Package attualmente catalogati:
 - marketing:
   - `flex_metrics_table_mvp` `0.2.1`
   - `flex_table_flat_mvp` `0.2.0`
+- shared:
+  - `period_compare_switch_mvp` `0.1.0`
+  - `metric_switch_selector_mvp` `0.1.0`
+  - `lag_correlation_explorer_mvp` `0.1.0`
 
 Capabilita oggi operative della platform:
 

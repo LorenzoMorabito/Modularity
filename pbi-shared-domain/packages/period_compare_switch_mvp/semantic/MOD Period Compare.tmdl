@@ -1,0 +1,95 @@
+table 'MOD Period Compare'
+
+	measure 'Period Compare Input Short Current' = [MOD_BIND_SHORT_CURRENT_MEASURE]
+		isHidden
+
+	measure 'Period Compare Input Short Reference' = [MOD_BIND_SHORT_REFERENCE_MEASURE]
+		isHidden
+
+	measure 'Period Compare Input Long Current' = [MOD_BIND_LONG_CURRENT_MEASURE]
+		isHidden
+
+	measure 'Period Compare Input Long Reference' = [MOD_BIND_LONG_REFERENCE_MEASURE]
+		isHidden
+
+	measure 'Period Compare Selected Current Value' =
+			
+			SWITCH(
+			    SELECTEDVALUE('MOD Period Compare'[ModeKey], "short"),
+			    "short", [Period Compare Input Short Current],
+			    "long", [Period Compare Input Long Current]
+			)
+		displayFolder: Outputs
+
+	measure 'Period Compare Selected Reference Value' =
+			
+			SWITCH(
+			    SELECTEDVALUE('MOD Period Compare'[ModeKey], "short"),
+			    "short", [Period Compare Input Short Reference],
+			    "long", [Period Compare Input Long Reference]
+			)
+		displayFolder: Outputs
+
+	measure 'Period Compare Selected Delta' =
+			
+			VAR ref = [Period Compare Selected Reference Value]
+			RETURN IF(ISBLANK(ref), BLANK(), [Period Compare Selected Current Value] - ref)
+		displayFolder: Outputs
+
+	measure 'Period Compare Selected Delta %' =
+			
+			VAR ref = [Period Compare Selected Reference Value]
+			RETURN IF(ISBLANK(ref), BLANK(), DIVIDE([Period Compare Selected Current Value] - ref, ref))
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Outputs
+
+	measure 'Period Compare Selected Horizon Label' =
+			
+			SELECTEDVALUE('MOD Period Compare'[DisplayLabel], "Current Period")
+		displayFolder: Presentation
+
+	measure 'Period Compare Title' =
+			
+			"Period Compare | " & [Period Compare Selected Horizon Label]
+		displayFolder: Presentation
+
+	column ModeKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [ModeKey]
+
+	column DisplayLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [DisplayLabel]
+		sortByColumn: SortOrder
+
+	column SortOrder
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [SortOrder]
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value4]
+
+	partition 'MOD Period Compare' = calculated
+		mode: import
+		source = ```
+				DATATABLE(
+				    "ModeKey", STRING,
+				    "DisplayLabel", STRING,
+				    "SortOrder", INTEGER,
+				    "Column", INTEGER,
+				    {
+				        {"short", "Current Period", 1, BLANK()},
+				        {"long", "Rolling Period", 2, BLANK()}
+				    }
+				)
+				```

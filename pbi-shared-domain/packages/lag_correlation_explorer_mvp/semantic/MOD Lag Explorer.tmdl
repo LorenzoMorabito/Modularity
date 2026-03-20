@@ -1,0 +1,90 @@
+table 'MOD Lag Explorer'
+
+	measure 'Lag Explorer Selected Lag' = SELECTEDVALUE('MOD Lag Explorer'[Value], 0)
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Lag Explorer Driver Measure (Lag k)' =
+			
+			VAR k = [Lag Explorer Selected Lag]
+			RETURN CALCULATE('_MOD Lag Explorer Inputs'[Lag Explorer Input Driver Measure], DATEADD(MOD_BIND_PERIOD_AXIS[Value], -k, QUARTER))
+		displayFolder: Outputs
+
+	measure 'Lag Explorer Response Measure' = '_MOD Lag Explorer Inputs'[Lag Explorer Input Response Measure]
+		displayFolder: Outputs
+
+	measure 'Lag Explorer Correlation (Lag k)' =
+			
+			VAR t0 = ADDCOLUMNS(ALLSELECTED(MOD_BIND_PERIOD_AXIS[Value]), "x", [Lag Explorer Driver Measure (Lag k)], "y", [Lag Explorer Response Measure])
+			VAR t = FILTER(t0, NOT ISBLANK([x]) && NOT ISBLANK([y]))
+			VAR n = COUNTROWS(t)
+			VAR avgx = AVERAGEX(t, [x])
+			VAR avgy = AVERAGEX(t, [y])
+			VAR cov = SUMX(t, ([x] - avgx) * ([y] - avgy))
+			VAR ssx = SUMX(t, ([x] - avgx) * ([x] - avgx))
+			VAR ssy = SUMX(t, ([y] - avgy) * ([y] - avgy))
+			RETURN IF(n >= 3 && ssx > 0 && ssy > 0, cov / SQRT(ssx * ssy))
+		displayFolder: Outputs
+
+	measure 'Lag Explorer N Points' =
+			
+			VAR t0 = ADDCOLUMNS(ALLSELECTED(MOD_BIND_PERIOD_AXIS[Value]), "x", [Lag Explorer Driver Measure (Lag k)], "y", [Lag Explorer Response Measure])
+			RETURN COUNTROWS(FILTER(t0, NOT ISBLANK([x]) && NOT ISBLANK([y])))
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Lag Explorer Best Lag' =
+			
+			VAR t = ADDCOLUMNS(ALL('MOD Lag Explorer'[Value]), "c", CALCULATE([Lag Explorer Correlation (Lag k)]))
+			RETURN MAXX(TOPN(1, t, [c], DESC), 'MOD Lag Explorer'[Value])
+		formatString: 0
+		displayFolder: Diagnostics
+
+	measure 'Lag Explorer Best Correlation' =
+			
+			VAR t = ADDCOLUMNS(ALL('MOD Lag Explorer'[Value]), "c", CALCULATE([Lag Explorer Correlation (Lag k)]))
+			RETURN MAXX(t, [c])
+		displayFolder: Diagnostics
+
+	measure 'Lag Explorer Response Delta' =
+			
+			[Lag Explorer Response Measure] - CALCULATE([Lag Explorer Response Measure], DATEADD(MOD_BIND_PERIOD_AXIS[Value], -1, QUARTER))
+		displayFolder: Diagnostics
+
+	measure 'Lag Explorer Driver Delta (Lag k)' =
+			
+			VAR k = [Lag Explorer Selected Lag]
+			VAR currentDriver = CALCULATE('_MOD Lag Explorer Inputs'[Lag Explorer Input Driver Measure], DATEADD(MOD_BIND_PERIOD_AXIS[Value], -k, QUARTER))
+			VAR previousDriver = CALCULATE('_MOD Lag Explorer Inputs'[Lag Explorer Input Driver Measure], DATEADD(MOD_BIND_PERIOD_AXIS[Value], -(k + 1), QUARTER))
+			RETURN currentDriver - previousDriver
+		displayFolder: Diagnostics
+
+	measure 'Lag Explorer Correlation Delta (Lag k)' =
+			
+			VAR t0 = ADDCOLUMNS(ALLSELECTED(MOD_BIND_PERIOD_AXIS[Value]), "x", [Lag Explorer Driver Delta (Lag k)], "y", [Lag Explorer Response Delta])
+			VAR t = FILTER(t0, NOT ISBLANK([x]) && NOT ISBLANK([y]))
+			VAR n = COUNTROWS(t)
+			VAR avgx = AVERAGEX(t, [x])
+			VAR avgy = AVERAGEX(t, [y])
+			VAR cov = SUMX(t, ([x] - avgx) * ([y] - avgy))
+			VAR ssx = SUMX(t, ([x] - avgx) * ([x] - avgx))
+			VAR ssy = SUMX(t, ([y] - avgy) * ([y] - avgy))
+			RETURN IF(n >= 3 && ssx > 0 && ssy > 0, cov / SQRT(ssx * ssy))
+		displayFolder: Diagnostics
+
+	measure 'Lag Explorer Driver Measure (Adstock)' =
+			
+			VAR lambda = SELECTEDVALUE('_MOD Lag Explorer Lambda'[Value], 0.5)
+			VAR maxLag = SELECTEDVALUE('_MOD Lag Explorer MaxLag'[Value], 4)
+			RETURN SUMX(GENERATESERIES(0, maxLag, 1), VAR i = [Value] RETURN POWER(lambda, i) * CALCULATE('_MOD Lag Explorer Inputs'[Lag Explorer Input Driver Measure], DATEADD(MOD_BIND_PERIOD_AXIS[Value], -i, QUARTER)))
+		displayFolder: Diagnostics
+
+	column Value
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition 'MOD Lag Explorer' = calculated
+		mode: import
+		source = GENERATESERIES(0, 12, 1)

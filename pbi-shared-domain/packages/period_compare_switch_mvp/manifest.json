@@ -1,0 +1,101 @@
+{
+  "moduleId": "period_compare_switch_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic short-vs-rolling period comparison selector extracted from the legacy Product Analysis period switch logic.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_SHORT_CURRENT_MEASURE",
+      "MOD_BIND_SHORT_REFERENCE_MEASURE",
+      "MOD_BIND_LONG_CURRENT_MEASURE",
+      "MOD_BIND_LONG_REFERENCE_MEASURE"
+    ],
+    "coreColumns": []
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "short_current_measure",
+        "bindingKey": "MOD_BIND_SHORT_CURRENT_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Short Current Measure",
+        "description": "Metric used when the selector is on the short-horizon mode.",
+        "semanticRole": "period.short.current",
+        "defaultValue": "Sales Values",
+        "suggestions": [
+          "Sales Values",
+          "Values",
+          "ACT",
+          "Current"
+        ]
+      },
+      {
+        "id": "short_reference_measure",
+        "bindingKey": "MOD_BIND_SHORT_REFERENCE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Short Reference Measure",
+        "description": "Reference metric used for the short-horizon mode.",
+        "semanticRole": "period.short.reference",
+        "defaultValue": "Sales Values PY",
+        "suggestions": [
+          "Sales Values PY",
+          "PY",
+          "Previous Year",
+          "Reference"
+        ]
+      },
+      {
+        "id": "long_current_measure",
+        "bindingKey": "MOD_BIND_LONG_CURRENT_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Rolling Current Measure",
+        "description": "Metric used when the selector is on the rolling-horizon mode.",
+        "semanticRole": "period.long.current",
+        "defaultValue": "Sales Values MAT",
+        "suggestions": [
+          "Sales Values MAT",
+          "MAT",
+          "Rolling",
+          "Current MAT"
+        ]
+      },
+      {
+        "id": "long_reference_measure",
+        "bindingKey": "MOD_BIND_LONG_REFERENCE_MEASURE",
+        "kind": "measure",
+        "required": true,
+        "label": "Rolling Reference Measure",
+        "description": "Reference metric used for the rolling-horizon mode.",
+        "semanticRole": "period.long.reference",
+        "defaultValue": "Sales Values MAT PY",
+        "suggestions": [
+          "Sales Values MAT PY",
+          "MAT PY",
+          "Rolling PY",
+          "Previous Year MAT"
+        ]
+      }
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "MOD Period Compare"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Period Compare",
+    "hiddenTables": []
+  }
+}

@@ -40,6 +40,43 @@ function Merge-PbiModuleMappings {
     return $merged
 }
 
+function Resolve-PbiDefaultModuleMapping {
+    param(
+        [Parameter(Mandatory = $true)]$Manifest,
+        $OverrideMapping
+    )
+
+    $measureMappings = [ordered]@{}
+    $columnMappings = [ordered]@{}
+
+    foreach ($measureName in @($Manifest.requires.coreMeasures)) {
+        $measureMappings[$measureName] = $measureName
+    }
+
+    foreach ($columnReference in @($Manifest.requires.coreColumns)) {
+        $columnMappings[$columnReference] = $columnReference
+    }
+
+    if ($OverrideMapping) {
+        if ($OverrideMapping.coreMeasures) {
+            foreach ($property in $OverrideMapping.coreMeasures.PSObject.Properties) {
+                $measureMappings[$property.Name] = $property.Value
+            }
+        }
+
+        if ($OverrideMapping.coreColumns) {
+            foreach ($property in $OverrideMapping.coreColumns.PSObject.Properties) {
+                $columnMappings[$property.Name] = $property.Value
+            }
+        }
+    }
+
+    return [ordered]@{
+        coreMeasures = $measureMappings
+        coreColumns  = $columnMappings
+    }
+}
+
 function Resolve-PbiModuleMapping {
     param(
         [Parameter(Mandatory = $true)]$Module,
@@ -55,7 +92,7 @@ function Resolve-PbiModuleMapping {
             Resolve-PbiMarketingModuleMapping -Manifest $Module.Manifest -OverrideMapping $OverrideMapping
         }
         default {
-            throw "No mapping resolver is implemented for domain '$($Module.Domain)'."
+            Resolve-PbiDefaultModuleMapping -Manifest $Module.Manifest -OverrideMapping $OverrideMapping
         }
     }
 
@@ -312,7 +349,7 @@ function Install-PbiModulePackage {
         reportObjectsAdded  = $reportObjectsAdded
         installedObjects    = [ordered]@{
             tables = @($module.Manifest.provides.semanticTables)
-            page   = if ($module.Manifest.provides.reportPage) { $module.Manifest.provides.reportPage.name } else { "" }
+            page   = if ($module.Manifest.provides.PSObject.Properties['reportPage']) { $module.Manifest.provides.reportPage.name } else { "" }
         }
         impactMetrics       = if ($OperationMetadata -and $OperationMetadata.impactMetrics) {
             $OperationMetadata.impactMetrics

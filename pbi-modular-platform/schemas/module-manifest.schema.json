@@ -297,7 +297,8 @@
           "enum": [
             "static",
             "flex-flat",
-            "flex-pivot"
+            "flex-pivot",
+            "metric-switch"
           ]
         }
       },

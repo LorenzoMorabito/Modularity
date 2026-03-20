@@ -1,0 +1,21 @@
+table '_MOD Lag Explorer MaxLag'
+	isHidden
+
+	column Value
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition '_MOD Lag Explorer MaxLag' = calculated
+		mode: import
+		source = ```
+				DATATABLE(
+				    "Value", INTEGER,
+				    {
+				        {4},
+				        {8},
+				        {12}
+				    }
+				)
+				```

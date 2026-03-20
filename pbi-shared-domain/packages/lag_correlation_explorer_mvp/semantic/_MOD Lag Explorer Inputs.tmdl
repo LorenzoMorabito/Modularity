@@ -1,0 +1,17 @@
+table '_MOD Lag Explorer Inputs'
+	isHidden
+
+	measure 'Lag Explorer Input Driver Measure' = [MOD_BIND_DRIVER_MEASURE]
+
+	measure 'Lag Explorer Input Response Measure' = [MOD_BIND_RESPONSE_MEASURE]
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition '_MOD Lag Explorer Inputs' = calculated
+		mode: import
+		source = Row("Column", BLANK())

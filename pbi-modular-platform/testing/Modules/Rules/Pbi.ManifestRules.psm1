@@ -34,7 +34,8 @@ function Invoke-PbiModuleManifestRules {
         }
     }
 
-    if ($Module.Manifest.provides.reportPage) {
+    $reportPage = if ($Module.Manifest.provides.PSObject.Properties['reportPage']) { $Module.Manifest.provides.reportPage } else { $null }
+    if ($reportPage) {
         $reportRoot = Join-Path $Module.PackageRoot "report"
         $pageJsonPath = Join-Path $reportRoot "page.json"
 
