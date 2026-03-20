@@ -59,6 +59,9 @@ These areas are valid package candidates but are still more intertwined at repor
    - entity grain switch
    - TopN selector
    - ranking table logic
+   Status:
+   - semantic-first extraction implemented
+   - report UX still pending as a follow-up wave
 
 3. `bucketed_overview_matrix_bundle_mvp`
    Combines:

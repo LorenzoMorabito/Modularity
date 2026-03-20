@@ -30,6 +30,16 @@
       "consumerCompatibility": [
         "shared/any-semantic-model"
       ]
+    },
+    {
+      "moduleId": "topn_target_driver_bundle_mvp",
+      "version": "0.1.0",
+      "status": "experimental",
+      "path": "packages/topn_target_driver_bundle_mvp",
+      "displayName": "TopN Target Driver Bundle MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-rankable-dimensions"
+      ]
     }
   ]
 }

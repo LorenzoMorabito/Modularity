@@ -1,0 +1,29 @@
+table '_MOD TopN Driver Targets'
+	isHidden
+
+	column TargetGrainKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [TargetGrainKey]
+
+	column TargetSelector
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [TargetSelector]
+
+	column TargetGrainLabel
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [TargetGrainLabel]
+
+	column TargetEntity
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [TargetEntity]
+
+	partition '_MOD TopN Driver Targets' = calculated
+		mode: import
+		source = DATATABLE("TargetGrainKey", STRING, "TargetSelector", STRING, "TargetGrainLabel", STRING, "TargetEntity", STRING, {{"dimension_1", "TODO", "TODO", "(Select target)"}})

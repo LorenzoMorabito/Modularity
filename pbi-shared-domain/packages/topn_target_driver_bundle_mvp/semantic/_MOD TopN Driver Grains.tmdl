@@ -1,0 +1,24 @@
+table '_MOD TopN Driver Grains'
+	isHidden
+
+	column GrainKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [GrainKey]
+
+	column GrainLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [GrainLabel]
+
+	column GrainSort
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [GrainSort]
+
+	partition '_MOD TopN Driver Grains' = calculated
+		mode: import
+		source = DATATABLE("GrainKey", STRING, "GrainLabel", STRING, "GrainSort", INTEGER, {{"dimension_1", "TODO", 1}})

@@ -1,0 +1,173 @@
+{
+  "moduleId": "topn_target_driver_bundle_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "experimental",
+  "description": "Generic TopN plus optional target-driven ranking bundle extracted from the legacy TopN, target entity, and top-by selector logic.",
+  "requires": {
+    "coreMeasures": [],
+    "coreColumns": []
+  },
+  "bindingContract": {
+    "mode": "collection-guided",
+    "collections": [
+      {
+        "id": "dimensions",
+        "kind": "column",
+        "label": "Entity Dimensions",
+        "description": "Choose the entity columns that can be ranked and optionally selected as targets.",
+        "itemLabel": "Dimension",
+        "minItems": 1,
+        "maxItems": 4,
+        "defaultVisibleCount": 2,
+        "bindingKeyPrefix": "MOD_BIND_DIMENSION_",
+        "bindingKeySuffix": "[Value]",
+        "defaultItems": [
+          {
+            "label": "Dimension 1",
+            "description": "Primary ranking grain.",
+            "defaultValue": "T_DIM_PRODUCT[Product]",
+            "suggestions": [
+              "Product",
+              "Brand",
+              "SKU"
+            ]
+          },
+          {
+            "label": "Dimension 2",
+            "description": "Secondary ranking grain.",
+            "defaultValue": "T_DIM_CORPORATION[Corporation]",
+            "suggestions": [
+              "Corporation",
+              "Company",
+              "Manufacturer"
+            ]
+          },
+          {
+            "label": "Dimension 3",
+            "description": "Additional ranking grain.",
+            "defaultValue": "T_DIM_COUNTRY[Country]",
+            "suggestions": [
+              "Country",
+              "Market",
+              "Region"
+            ]
+          },
+          {
+            "label": "Dimension 4",
+            "description": "Additional ranking grain.",
+            "defaultValue": "T_DIM_MOLECULE[MoleculeNorm]",
+            "suggestions": [
+              "Molecule",
+              "Ingredient",
+              "Segment"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "measures",
+        "kind": "measure",
+        "label": "Ranking Measures",
+        "description": "Choose the measures available for TopN ranking and target comparison.",
+        "itemLabel": "Measure",
+        "minItems": 1,
+        "maxItems": 6,
+        "defaultVisibleCount": 2,
+        "bindingKeyPrefix": "MOD_BIND_MEASURE_",
+        "defaultItems": [
+          {
+            "label": "Measure 1",
+            "description": "Default ranking metric.",
+            "defaultValue": "Sales Values",
+            "suggestions": [
+              "Sales Values",
+              "Values",
+              "Revenue"
+            ]
+          },
+          {
+            "label": "Measure 2",
+            "description": "Alternative ranking metric.",
+            "defaultValue": "Promo Spend",
+            "suggestions": [
+              "Promo Spend",
+              "Spend",
+              "Investment"
+            ]
+          },
+          {
+            "label": "Measure 3",
+            "description": "Alternative ranking metric.",
+            "defaultValue": "Sales Values Δ vs PY",
+            "suggestions": [
+              "Values PPG%",
+              "Sales Values Δ vs PY",
+              "Growth"
+            ]
+          },
+          {
+            "label": "Measure 4",
+            "description": "Alternative ranking metric.",
+            "defaultValue": "Sales Units",
+            "suggestions": [
+              "Sales Units",
+              "Units",
+              "Volume"
+            ]
+          },
+          {
+            "label": "Measure 5",
+            "description": "Alternative ranking metric.",
+            "defaultValue": "Fin ACT",
+            "suggestions": [
+              "Fin ACT",
+              "Actual",
+              "ACT"
+            ]
+          },
+          {
+            "label": "Measure 6",
+            "description": "Alternative ranking metric.",
+            "defaultValue": "Fin BDG",
+            "suggestions": [
+              "Fin BDG",
+              "Budget",
+              "BDG"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "rendering": {
+    "strategy": "topn-target-driver"
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD TopN Driver Inputs",
+      "_MOD TopN Driver Grains",
+      "_MOD TopN Driver Metrics",
+      "_MOD TopN Driver Targets",
+      "_MOD TopN Driver N",
+      "MOD TopN Driver"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD TopN Driver",
+    "hiddenTables": [
+      "_MOD TopN Driver Inputs",
+      "_MOD TopN Driver Grains",
+      "_MOD TopN Driver Metrics",
+      "_MOD TopN Driver Targets",
+      "_MOD TopN Driver N"
+    ]
+  }
+}

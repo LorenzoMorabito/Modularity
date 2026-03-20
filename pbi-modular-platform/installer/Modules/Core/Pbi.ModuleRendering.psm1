@@ -816,6 +816,457 @@ function Get-PbiRenderedMetricSwitchSemanticAssets {
     return @($mappings)
 }
 
+function New-PbiTopNDriverInputsTemplate {
+    param([Parameter(Mandatory = $true)]$MeasureItems)
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD TopN Driver Inputs'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+
+    for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
+        $item = $MeasureItems[$index]
+        $measureOrdinal = $index + 1
+        $lines.Add(("`tmeasure 'TopN Driver Input Metric {0}' = [{1}]" -f $measureOrdinal, $item.bindingKey))
+        $lines.Add("")
+    }
+
+    $lines.Add("`tcolumn Column")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [Column]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD TopN Driver Inputs' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add("`t`tsource = Row(""Column"", BLANK())")
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiTopNDriverGrainSelectorTemplate {
+    param([Parameter(Mandatory = $true)]$DimensionItems)
+
+    $rows = New-Object System.Collections.Generic.List[string]
+    for ($index = 0; $index -lt $DimensionItems.Count; $index++) {
+        $item = $DimensionItems[$index]
+        $dimensionOrdinal = $index + 1
+        $rows.Add(('{{"dimension_{0}", "{1}", {2}}}' -f $dimensionOrdinal, (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)), $dimensionOrdinal))
+    }
+
+    $partitionSource = ('DATATABLE("GrainKey", STRING, "GrainLabel", STRING, "GrainSort", INTEGER, {{ {0} }})' -f ($rows -join ", "))
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD TopN Driver Grains'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+    $lines.Add("`tcolumn GrainKey")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [GrainKey]")
+    $lines.Add("")
+    $lines.Add("`tcolumn GrainLabel")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tsourceColumn: [GrainLabel]")
+    $lines.Add("`t`tsortByColumn: GrainSort")
+    $lines.Add("")
+    $lines.Add("`tcolumn GrainSort")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [GrainSort]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD TopN Driver Grains' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add(("`t`tsource = {0}" -f $partitionSource))
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiTopNDriverMetricSelectorTemplate {
+    param([Parameter(Mandatory = $true)]$MeasureItems)
+
+    $rows = New-Object System.Collections.Generic.List[string]
+    for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
+        $item = $MeasureItems[$index]
+        $measureOrdinal = $index + 1
+        $rows.Add(('{{"metric_{0}", "{1}", {2}}}' -f $measureOrdinal, (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)), $measureOrdinal))
+    }
+
+    $partitionSource = ('DATATABLE("MetricKey", STRING, "MetricLabel", STRING, "MetricSort", INTEGER, {{ {0} }})' -f ($rows -join ", "))
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD TopN Driver Metrics'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricKey")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [MetricKey]")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricLabel")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tsourceColumn: [MetricLabel]")
+    $lines.Add("`t`tsortByColumn: MetricSort")
+    $lines.Add("")
+    $lines.Add("`tcolumn MetricSort")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [MetricSort]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD TopN Driver Metrics' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add(("`t`tsource = {0}" -f $partitionSource))
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiTopNDriverTargetSelectorTemplate {
+    param([Parameter(Mandatory = $true)]$DimensionItems)
+
+    $placeholderRows = New-Object System.Collections.Generic.List[string]
+    $targetBlocks = New-Object System.Collections.Generic.List[string]
+
+    for ($index = 0; $index -lt $DimensionItems.Count; $index++) {
+        $item = $DimensionItems[$index]
+        $dimensionOrdinal = $index + 1
+        $dimensionKey = ("dimension_{0}" -f $dimensionOrdinal)
+        $dimensionLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)
+
+        $placeholderRows.Add(('                        {{"{0}", "{1} | (Select target)", "{1}", "(Select target)"}}' -f $dimensionKey, $dimensionLabel))
+
+        $targetBlocks.Add((@(
+                    "                SELECTCOLUMNS(",
+                    "                    FILTER(",
+                    ("                        VALUES({0})," -f $item.bindingKey),
+                    ("                        NOT ISBLANK({0})" -f $item.bindingKey),
+                    "                    ),",
+                    ('                    "TargetGrainKey", "{0}",' -f $dimensionKey),
+                    ('                    "TargetSelector", "{0} | " & ({1} & ""),' -f $dimensionLabel, $item.bindingKey),
+                    ('                    "TargetGrainLabel", "{0}",' -f $dimensionLabel),
+                    ('                    "TargetEntity", {0} & ""' -f $item.bindingKey),
+                    "                )"
+                ) -join "`r`n"))
+    }
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD TopN Driver Targets'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+    $lines.Add("`tcolumn TargetGrainKey")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [TargetGrainKey]")
+    $lines.Add("")
+    $lines.Add("`tcolumn TargetSelector")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [TargetSelector]")
+    $lines.Add("")
+    $lines.Add("`tcolumn TargetGrainLabel")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [TargetGrainLabel]")
+    $lines.Add("")
+    $lines.Add("`tcolumn TargetEntity")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tsummarizeBy: none")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [TargetEntity]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD TopN Driver Targets' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add("`t`tsource = " + '```')
+    $lines.Add("                VAR Placeholder =")
+    $lines.Add("                    DATATABLE(")
+    $lines.Add("                        ""TargetGrainKey"", STRING,")
+    $lines.Add("                        ""TargetSelector"", STRING,")
+    $lines.Add("                        ""TargetGrainLabel"", STRING,")
+    $lines.Add("                        ""TargetEntity"", STRING,")
+    $lines.Add("                        {")
+    $lines.Add(($placeholderRows -join ",`r`n"))
+    $lines.Add("                        }")
+    $lines.Add("                    )")
+    $lines.Add("                RETURN")
+    $lines.Add("                UNION(")
+    $lines.Add("                    Placeholder,")
+    $lines.Add(($targetBlocks -join ",`r`n"))
+    $lines.Add("                )")
+    $lines.Add("                " + '```')
+
+    return (($lines -join "`r`n") + "`r`n")
+}
+
+function New-PbiTopNDriverTopNSelectorTemplate {
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table '_MOD TopN Driver N'")
+    $lines.Add("`tisHidden")
+    $lines.Add("")
+    $lines.Add("`tcolumn TopN")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [Value]")
+    $lines.Add("")
+    $lines.Add("`tpartition '_MOD TopN Driver N' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add("`t`tsource = GENERATESERIES(1, 20, 1)")
+
+    return ($lines -join "`r`n")
+}
+
+function New-PbiTopNDriverFacadeTemplate {
+    param(
+        [Parameter(Mandatory = $true)]$DimensionItems,
+        [Parameter(Mandatory = $true)]$MeasureItems
+    )
+
+    $defaultDimensionLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$DimensionItems[0].bindingKey)
+    $defaultMetricLabel = Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$MeasureItems[0].bindingKey)
+    $metricSwitchBranches = New-Object System.Collections.Generic.List[string]
+    $currentEntityBranches = New-Object System.Collections.Generic.List[string]
+    $rankBranches = New-Object System.Collections.Generic.List[string]
+    $rankExcludingBranches = New-Object System.Collections.Generic.List[string]
+
+    for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
+        $measureOrdinal = $index + 1
+        $metricSwitchBranches.Add(('            "metric_{0}", ''_MOD TopN Driver Inputs''[TopN Driver Input Metric {1}]' -f $measureOrdinal, $measureOrdinal))
+    }
+
+    for ($index = 0; $index -lt $DimensionItems.Count; $index++) {
+        $item = $DimensionItems[$index]
+        $dimensionOrdinal = $index + 1
+        $dimensionKey = ("dimension_{0}" -f $dimensionOrdinal)
+        $columnReference = [string]$item.bindingKey
+
+        $currentEntityBranches.Add(('            "{0}", SELECTEDVALUE({1}) & ""' -f $dimensionKey, $columnReference))
+        $rankBranches.Add((@(
+                    ('            "{0}",' -f $dimensionKey),
+                    ('                VAR CurrentEntity = SELECTEDVALUE({0})' -f $columnReference),
+                    "                RETURN",
+                    "                    IF(",
+                    "                        ISBLANK(CurrentEntity),",
+                    "                        BLANK(),",
+                    "                        RANKX(",
+                    ('                            ALLSELECTED({0}),' -f $columnReference),
+                    "                            CALCULATE([TopN Driver Selected Metric Value]),",
+                    "                            ,",
+                    "                            DESC,",
+                    "                            DENSE",
+                    "                        )",
+                    "                    )"
+                ) -join "`r`n"))
+        $rankExcludingBranches.Add((@(
+                    ('            "{0}",' -f $dimensionKey),
+                    ('                VAR CurrentEntity = SELECTEDVALUE({0})' -f $columnReference),
+                    "                RETURN",
+                    "                    IF(",
+                    "                        ISBLANK(CurrentEntity),",
+                    "                        BLANK(),",
+                    "                        RANKX(",
+                    "                            FILTER(",
+                    ('                                ALLSELECTED({0}),' -f $columnReference),
+                    ('                                ({0} & "") <> TargetEntity' -f $columnReference),
+                    "                            ),",
+                    "                            CALCULATE([TopN Driver Selected Metric Value]),",
+                    "                            ,",
+                    "                            DESC,",
+                    "                            DENSE",
+                    "                        )",
+                    "                    )"
+                ) -join "`r`n"))
+    }
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add("table 'MOD TopN Driver'")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected N' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD TopN Driver N'[TopN], 5)")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Grain Key' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD TopN Driver Grains'[GrainKey], ""dimension_1"")")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Grain Label' =")
+    $lines.Add(("`t`tSELECTEDVALUE('_MOD TopN Driver Grains'[GrainLabel], ""{0}"")" -f $defaultDimensionLabel))
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Metric Key' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD TopN Driver Metrics'[MetricKey], ""metric_1"")")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Metric Label' =")
+    $lines.Add(("`t`tSELECTEDVALUE('_MOD TopN Driver Metrics'[MetricLabel], ""{0}"")" -f $defaultMetricLabel))
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Target Grain Key' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD TopN Driver Targets'[TargetGrainKey])")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Target Grain Label' =")
+    $lines.Add("`t`tSELECTEDVALUE('_MOD TopN Driver Targets'[TargetGrainLabel])")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Target Entity' =")
+    $lines.Add("`t`tVAR TargetEntity = SELECTEDVALUE('_MOD TopN Driver Targets'[TargetEntity])")
+    $lines.Add("`t`tRETURN")
+    $lines.Add("`t`tIF(TargetEntity = ""(Select target)"", BLANK(), TargetEntity)")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Is Target Selected' =")
+    $lines.Add("`t`tVAR TargetEntity = [TopN Driver Selected Target Entity]")
+    $lines.Add("`t`tVAR TargetGrainKey = [TopN Driver Selected Target Grain Key]")
+    $lines.Add("`t`tVAR ActiveGrainKey = [TopN Driver Selected Grain Key]")
+    $lines.Add("`t`tRETURN")
+    $lines.Add("`t`tIF(NOT ISBLANK(TargetEntity) && TargetGrainKey = ActiveGrainKey, 1, 0)")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Selection")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Selected Metric Value' =")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [TopN Driver Selected Metric Key],")
+    $lines.Add(($metricSwitchBranches -join ",`r`n"))
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Outputs")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Current Entity' =")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [TopN Driver Selected Grain Key],")
+    $lines.Add(($currentEntityBranches -join ",`r`n"))
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Outputs")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Rank' =")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [TopN Driver Selected Grain Key],")
+    $lines.Add(($rankBranches -join ",`r`n"))
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Ranking")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Rank Excluding Target' =")
+    $lines.Add("`t`tVAR TargetEntity = [TopN Driver Selected Target Entity]")
+    $lines.Add("`t`tRETURN")
+    $lines.Add("`t`tSWITCH(")
+    $lines.Add("`t`t    [TopN Driver Selected Grain Key],")
+    $lines.Add(($rankExcludingBranches -join ",`r`n"))
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Ranking")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Show In Ranked Set' =")
+    $lines.Add("`t`tVAR SelectedN = [TopN Driver Selected N]")
+    $lines.Add("`t`tVAR CurrentEntity = [TopN Driver Current Entity]")
+    $lines.Add("`t`tRETURN")
+    $lines.Add("`t`tIF(")
+    $lines.Add("`t`t    ISBLANK(CurrentEntity),")
+    $lines.Add("`t`t    BLANK(),")
+    $lines.Add("`t`t    IF(")
+    $lines.Add("`t`t        [TopN Driver Is Target Selected] = 0,")
+    $lines.Add("`t`t        IF([TopN Driver Rank] <= SelectedN, 1, 0),")
+    $lines.Add("`t`t        IF(")
+    $lines.Add("`t`t            CurrentEntity = [TopN Driver Selected Target Entity],")
+    $lines.Add("`t`t            1,")
+    $lines.Add("`t`t            IF([TopN Driver Rank Excluding Target] <= SelectedN - 1, 1, 0)")
+    $lines.Add("`t`t        )")
+    $lines.Add("`t`t    )")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Ranking")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Is Target Row' =")
+    $lines.Add("`t`tIF(")
+    $lines.Add("`t`t    [TopN Driver Is Target Selected] = 1 && [TopN Driver Current Entity] = [TopN Driver Selected Target Entity],")
+    $lines.Add("`t`t    1,")
+    $lines.Add("`t`t    0")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Ranking")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Target Badge' =")
+    $lines.Add("`t`tIF([TopN Driver Is Target Row] = 1, ""★"", BLANK())")
+    $lines.Add("`t`tdisplayFolder: Presentation")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Target Status' =")
+    $lines.Add("`t`tVAR TargetEntity = [TopN Driver Selected Target Entity]")
+    $lines.Add("`t`tVAR TargetGrainKey = [TopN Driver Selected Target Grain Key]")
+    $lines.Add("`t`tRETURN")
+    $lines.Add("`t`tIF(")
+    $lines.Add("`t`t    NOT ISBLANK(TargetEntity) && TargetGrainKey <> [TopN Driver Selected Grain Key],")
+    $lines.Add("`t`t    ""Target '"" & TargetEntity & ""' belongs to "" & [TopN Driver Selected Target Grain Label] & "" while the active ranking grain is "" & [TopN Driver Selected Grain Label] & ""."",")
+    $lines.Add("`t`t    BLANK()")
+    $lines.Add("`t`t)")
+    $lines.Add("`t`tdisplayFolder: Diagnostics")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Title' =")
+    $lines.Add("`t`t""Top "" & FORMAT([TopN Driver Selected N], ""0"") & "" | "" & [TopN Driver Selected Metric Label] & "" | "" & [TopN Driver Selected Grain Label] & IF([TopN Driver Is Target Selected] = 1, "" | Target: "" & [TopN Driver Selected Target Entity], """")")
+    $lines.Add("`t`tdisplayFolder: Presentation")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Metric Count' = " + $MeasureItems.Count)
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Diagnostics")
+    $lines.Add("")
+    $lines.Add("`tmeasure 'TopN Driver Grain Count' = " + $DimensionItems.Count)
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tdisplayFolder: Diagnostics")
+    $lines.Add("")
+    $lines.Add("`tcolumn Column")
+    $lines.Add("`t`tisHidden")
+    $lines.Add("`t`tformatString: 0")
+    $lines.Add("`t`tsummarizeBy: sum")
+    $lines.Add("`t`tisNameInferred")
+    $lines.Add("`t`tsourceColumn: [Column]")
+    $lines.Add("")
+    $lines.Add("`tpartition 'MOD TopN Driver' = calculated")
+    $lines.Add("`t`tmode: import")
+    $lines.Add("`t`tsource = Row(""Column"", BLANK())")
+
+    return (($lines -join "`r`n") + "`r`n")
+}
+
+function Get-PbiRenderedTopNDriverSemanticAssets {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [Parameter(Mandatory = $true)]$Module,
+        [Parameter(Mandatory = $true)]$Manifest,
+        [Parameter(Mandatory = $true)]$ResolvedMappings
+    )
+
+    $dimensionItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "dimensions")
+    $measureItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "measures")
+    $tableTemplates = [ordered]@{
+        "_MOD TopN Driver Inputs"  = (New-PbiTopNDriverInputsTemplate -MeasureItems $measureItems)
+        "_MOD TopN Driver Grains"  = (New-PbiTopNDriverGrainSelectorTemplate -DimensionItems $dimensionItems)
+        "_MOD TopN Driver Metrics" = (New-PbiTopNDriverMetricSelectorTemplate -MeasureItems $measureItems)
+        "_MOD TopN Driver Targets" = (New-PbiTopNDriverTargetSelectorTemplate -DimensionItems $dimensionItems)
+        "_MOD TopN Driver N"       = (New-PbiTopNDriverTopNSelectorTemplate)
+        "MOD TopN Driver"          = (New-PbiTopNDriverFacadeTemplate -DimensionItems $dimensionItems -MeasureItems $measureItems)
+    }
+
+    $mappings = @()
+    foreach ($tableName in @($Manifest.provides.semanticTables)) {
+        $destinationPath = Get-PbiTableDefinitionPath -Project $Project -TableName $tableName
+        $sourcePath = Join-Path (Join-Path $Module.PackageRoot "semantic") ($tableName + ".tmdl")
+        $renderedContent = Convert-PbiTextWithResolvedMappings -Text $tableTemplates[$tableName] -ResolvedMappings $ResolvedMappings
+        $mappings += (New-PbiRenderedModuleFileMapping -TableName $tableName -SourcePath $sourcePath -DestinationPath $destinationPath -RelativePath (Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path $destinationPath) -SourceContent $renderedContent)
+    }
+
+    return @($mappings)
+}
+
 function Get-PbiRenderedModuleSemanticAssets {
     param(
         [Parameter(Mandatory = $true)]$Project,
@@ -832,6 +1283,7 @@ function Get-PbiRenderedModuleSemanticAssets {
         "flex-flat" { return @(Get-PbiRenderedFlexFlatSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         "flex-pivot" { return @(Get-PbiRenderedFlexPivotSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         "metric-switch" { return @(Get-PbiRenderedMetricSwitchSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
+        "topn-target-driver" { return @(Get-PbiRenderedTopNDriverSemanticAssets -Project $Project -Module $Module -Manifest $Manifest -ResolvedMappings $ResolvedMappings) }
         default { return @() }
     }
 }

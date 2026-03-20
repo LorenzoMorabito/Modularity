@@ -298,7 +298,8 @@
             "static",
             "flex-flat",
             "flex-pivot",
-            "metric-switch"
+            "metric-switch",
+            "topn-target-driver"
           ]
         }
       },

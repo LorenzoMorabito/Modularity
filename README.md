@@ -26,6 +26,7 @@ Package attualmente catalogati:
   - `period_compare_switch_mvp` `0.1.0`
   - `metric_switch_selector_mvp` `0.1.0`
   - `lag_correlation_explorer_mvp` `0.1.0`
+  - `topn_target_driver_bundle_mvp` `0.1.0`
 
 Capabilita oggi operative della platform:
 

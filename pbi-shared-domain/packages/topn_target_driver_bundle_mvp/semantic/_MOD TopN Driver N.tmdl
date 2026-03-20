@@ -1,0 +1,12 @@
+table '_MOD TopN Driver N'
+	isHidden
+
+	column TopN
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition '_MOD TopN Driver N' = calculated
+		mode: import
+		source = GENERATESERIES(1, 20, 1)

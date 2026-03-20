@@ -1,0 +1,12 @@
+table 'MOD TopN Driver'
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD TopN Driver' = calculated
+		mode: import
+		source = Row("Column", BLANK())

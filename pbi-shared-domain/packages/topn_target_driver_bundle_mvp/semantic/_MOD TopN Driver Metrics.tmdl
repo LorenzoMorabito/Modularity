@@ -1,0 +1,24 @@
+table '_MOD TopN Driver Metrics'
+	isHidden
+
+	column MetricKey
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricKey]
+
+	column MetricLabel
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricLabel]
+
+	column MetricSort
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [MetricSort]
+
+	partition '_MOD TopN Driver Metrics' = calculated
+		mode: import
+		source = DATATABLE("MetricKey", STRING, "MetricLabel", STRING, "MetricSort", INTEGER, {{"metric_1", "TODO", 1}})
