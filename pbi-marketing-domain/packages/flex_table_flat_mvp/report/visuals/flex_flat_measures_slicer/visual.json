@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Flat Measures"
+                      "Entity": "_MOD Flex Flat Measures"
                     }
                   },
                   "Property": "Flat Measure"
                 }
               },
-              "queryRef": "MOD Flex Flat Measures.Flat Measure",
+              "queryRef": "_MOD Flex Flat Measures.Flat Measure",
               "nativeQueryRef": "Flat Measure",
               "active": true,
               "displayName": "Measures"
@@ -57,124 +57,6 @@
                 "Literal": {
                   "Value": "false"
                 }
-              }
-            }
-          }
-        }
-      ],
-      "general": [
-        {
-          "properties": {
-            "filter": {
-              "filter": {
-                "Version": 2,
-                "From": [
-                  {
-                    "Name": "m",
-                    "Entity": "MOD Flex Flat Measures",
-                    "Type": 0
-                  }
-                ],
-                "Where": [
-                  {
-                    "Condition": {
-                      "In": {
-                        "Expressions": [
-                          {
-                            "Column": {
-                              "Expression": {
-                                "SourceRef": {
-                                  "Source": "m"
-                                }
-                              },
-                              "Property": "Flat Measure Fields"
-                            }
-                          }
-                        ],
-                        "Values": [
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'''MOD Flex Flat Inputs''[Flat Input Metric 1]'"
-                              }
-                            }
-                          ],
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'''MOD Flex Flat Inputs''[Flat Input Metric 2]'"
-                              }
-                            }
-                          ]
-                        ]
-                      }
-                    },
-                    "Annotations": {
-                      "filterExpressionMetadata": {
-                        "expressions": [
-                          {
-                            "Column": {
-                              "Expression": {
-                                "SourceRef": {
-                                  "Entity": "MOD Flex Flat Measures"
-                                }
-                              },
-                              "Property": "Flat Measure"
-                            }
-                          }
-                        ],
-                        "decomposedIdentities": {
-                          "values": [
-                            [
-                              {
-                                "0": [
-                                  {
-                                    "Literal": {
-                                      "Value": "'''MOD Flex Flat Inputs''[Flat Input Metric 1]'"
-                                    }
-                                  }
-                                ]
-                              }
-                            ],
-                            [
-                              {
-                                "0": [
-                                  {
-                                    "Literal": {
-                                      "Value": "'''MOD Flex Flat Inputs''[Flat Input Metric 2]'"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
-                          ],
-                          "columns": [
-                            {
-                              "value": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "MOD Flex Flat Measures"
-                                    }
-                                  },
-                                  "Property": "Flat Measure Fields"
-                                }
-                              }
-                            }
-                          ]
-                        },
-                        "valueMap": [
-                          {
-                            "0": "{{bindingLabel:MOD_BIND_MEASURE_1}}"
-                          },
-                          {
-                            "0": "{{bindingLabel:MOD_BIND_MEASURE_2}}"
-                          }
-                        ]
-                      }
-                    }
-                  }
-                ]
               }
             }
           }

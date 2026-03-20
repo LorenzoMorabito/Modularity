@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Table Axis"
+                      "Entity": "_MOD Flex Pivot Axis"
                     }
                   },
                   "Property": "DimensionLabel"
                 }
               },
-              "queryRef": "MOD Flex Table Axis.DimensionLabel",
+              "queryRef": "_MOD Flex Pivot Axis.DimensionLabel",
               "nativeQueryRef": "DimensionLabel"
             },
             {
@@ -34,13 +34,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Table Axis"
+                      "Entity": "_MOD Flex Pivot Axis"
                     }
                   },
                   "Property": "AxisLabel"
                 }
               },
-              "queryRef": "MOD Flex Table Axis.AxisLabel",
+              "queryRef": "_MOD Flex Pivot Axis.AxisLabel",
               "nativeQueryRef": "AxisLabel"
             }
           ]
@@ -52,13 +52,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Table Measure Selector"
+                      "Entity": "_MOD Flex Pivot Selector"
                     }
                   },
                   "Property": "DisplayLabel"
                 }
               },
-              "queryRef": "MOD Flex Table Measure Selector.DisplayLabel",
+              "queryRef": "_MOD Flex Pivot Selector.DisplayLabel",
               "nativeQueryRef": "DisplayLabel"
             }
           ]
@@ -70,13 +70,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Table Metrics"
+                      "Entity": "MOD Flex Pivot"
                     }
                   },
                   "Property": "Flex Table Selected Value"
                 }
               },
-              "queryRef": "MOD Flex Table Metrics.Flex Table Selected Value",
+              "queryRef": "MOD Flex Pivot.Flex Table Selected Value",
               "nativeQueryRef": "Flex Table Selected Value"
             }
           ]
@@ -271,7 +271,7 @@
           "Measure": {
             "Expression": {
               "SourceRef": {
-                "Entity": "MOD Flex Table Metrics"
+                "Entity": "MOD Flex Pivot"
               }
             },
             "Property": "Flex Table Row Has Data"
@@ -283,7 +283,7 @@
           "From": [
             {
               "Name": "f",
-              "Entity": "MOD Flex Table Metrics",
+              "Entity": "MOD Flex Pivot",
               "Type": 0
             }
           ],

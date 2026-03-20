@@ -1,11 +1,11 @@
-table 'MOD Flex Table Metrics'
+table 'MOD Flex Pivot'
 	lineageTag: 9ad5d329-2db1-4474-a2d1-76b8244d3021
 
 	measure 'Flex Table Selected Value' =
 			
-			VAR SelectedMeasure = SELECTEDVALUE('MOD Flex Table Measure Selector'[MeasureKey])
-			VAR AxisKey = SELECTEDVALUE('MOD Flex Table Axis'[DimensionKey])
-			VAR AxisValue = SELECTEDVALUE('MOD Flex Table Axis'[AxisLabel])
+			VAR SelectedMeasure = SELECTEDVALUE('_MOD Flex Pivot Selector'[MeasureKey])
+			VAR AxisKey = SELECTEDVALUE('_MOD Flex Pivot Axis'[DimensionKey])
+			VAR AxisValue = SELECTEDVALUE('_MOD Flex Pivot Axis'[AxisLabel])
 			VAR BaseMetric =
 			    SWITCH(
 			        SelectedMeasure,
@@ -66,14 +66,14 @@ table 'MOD Flex Table Metrics'
 			
 			VAR NonBlankMeasureCount =
 			    SUMX(
-			        VALUES('MOD Flex Table Measure Selector'[MeasureKey]),
-			        VAR CurrentMeasureKey = 'MOD Flex Table Measure Selector'[MeasureKey]
+			        VALUES('_MOD Flex Pivot Selector'[MeasureKey]),
+			        VAR CurrentMeasureKey = '_MOD Flex Pivot Selector'[MeasureKey]
 			        RETURN
 			            IF(
 			                NOT ISBLANK(
 			                    CALCULATE(
 			                        [Flex Table Selected Value],
-			                        TREATAS({CurrentMeasureKey}, 'MOD Flex Table Measure Selector'[MeasureKey])
+			                        TREATAS({CurrentMeasureKey}, '_MOD Flex Pivot Selector'[MeasureKey])
 			                    )
 			                ),
 			                1,
@@ -90,10 +90,10 @@ table 'MOD Flex Table Metrics'
 			
 			VAR SelectedDimensions =
 			    CONCATENATEX(
-			        VALUES('MOD Flex Table Axis'[DimensionLabel]),
-			        'MOD Flex Table Axis'[DimensionLabel],
+			        VALUES('_MOD Flex Pivot Axis'[DimensionLabel]),
+			        '_MOD Flex Pivot Axis'[DimensionLabel],
 			        ", ",
-			        'MOD Flex Table Axis'[DimensionSort],
+			        '_MOD Flex Pivot Axis'[DimensionSort],
 			        ASC
 			    )
 			RETURN
@@ -111,6 +111,6 @@ table 'MOD Flex Table Metrics'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Flex Table Metrics' = calculated
+	partition 'MOD Flex Pivot' = calculated
 		mode: import
 		source = Row("Column", BLANK())

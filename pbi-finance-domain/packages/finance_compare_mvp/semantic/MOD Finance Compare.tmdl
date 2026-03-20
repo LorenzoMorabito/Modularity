@@ -1,4 +1,4 @@
-table 'MOD Finance Compare Metrics'
+table 'MOD Finance Compare'
 
 	measure 'Selected Reference Value' = [Metric Compare (Selected)]
 		displayFolder: Compare
@@ -29,6 +29,6 @@ table 'MOD Finance Compare Metrics'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Finance Compare Metrics' = calculated
+	partition 'MOD Finance Compare' = calculated
 		mode: import
 		source = Row("Column", BLANK())

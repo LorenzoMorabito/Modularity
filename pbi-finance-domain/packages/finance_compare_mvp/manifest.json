@@ -1,6 +1,6 @@
 {
   "moduleId": "finance_compare_mvp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "domain": "finance",
   "type": "semantic",
   "classification": "semantic-light",
@@ -97,9 +97,9 @@
   },
   "provides": {
     "semanticTables": [
-      "MOD Finance Compare Inputs",
-      "MOD Finance Compare Selector",
-      "MOD Finance Compare Metrics"
+      "_MOD Finance Compare Inputs",
+      "_MOD Finance Compare Selector",
+      "MOD Finance Compare"
     ],
     "reportPage": {
       "name": "8a4f2d4d3f11450ab001",
@@ -107,10 +107,10 @@
     }
   },
   "semanticUx": {
-    "primaryTable": "MOD Finance Compare Metrics",
+    "primaryTable": "MOD Finance Compare",
     "hiddenTables": [
-      "MOD Finance Compare Inputs",
-      "MOD Finance Compare Selector"
+      "_MOD Finance Compare Inputs",
+      "_MOD Finance Compare Selector"
     ]
   }
 }

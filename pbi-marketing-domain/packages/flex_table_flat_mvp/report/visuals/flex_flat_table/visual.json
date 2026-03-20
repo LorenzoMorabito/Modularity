@@ -50,13 +50,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Flat Inputs"
+                      "Entity": "MOD Flex Flat"
                     }
                   },
                   "Property": "Flat Input Metric 1"
                 }
               },
-              "queryRef": "MOD Flex Flat Inputs.Flat Input Metric 1",
+              "queryRef": "MOD Flex Flat.Flat Input Metric 1",
               "nativeQueryRef": "{{bindingLabel:MOD_BIND_MEASURE_1}}",
               "displayName": "{{bindingLabel:MOD_BIND_MEASURE_1}}"
             },
@@ -65,13 +65,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Flat Inputs"
+                      "Entity": "MOD Flex Flat"
                     }
                   },
                   "Property": "Flat Input Metric 2"
                 }
               },
-              "queryRef": "MOD Flex Flat Inputs.Flat Input Metric 2",
+              "queryRef": "MOD Flex Flat.Flat Input Metric 2",
               "nativeQueryRef": "{{bindingLabel:MOD_BIND_MEASURE_2}}",
               "displayName": "{{bindingLabel:MOD_BIND_MEASURE_2}}"
             }
@@ -82,7 +82,7 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Flat Dimensions"
+                      "Entity": "_MOD Flex Flat Dimensions"
                     }
                   },
                   "Property": "Flat Dimension"
@@ -96,7 +96,7 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Flat Measures"
+                      "Entity": "_MOD Flex Flat Measures"
                     }
                   },
                   "Property": "Flat Measure"

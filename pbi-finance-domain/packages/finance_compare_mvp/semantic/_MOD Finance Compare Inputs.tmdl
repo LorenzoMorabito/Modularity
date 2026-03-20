@@ -1,4 +1,4 @@
-table 'MOD Finance Compare Inputs'
+table '_MOD Finance Compare Inputs'
 	isHidden
 
 	measure 'Input Primary Measure' = [MOD_BIND_PRIMARY_MEASURE]
@@ -22,6 +22,6 @@ table 'MOD Finance Compare Inputs'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Finance Compare Inputs' = calculated
+	partition '_MOD Finance Compare Inputs' = calculated
 		mode: import
 		source = Row("Column", BLANK())

@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Finance Compare Metrics"
+                      "Entity": "MOD Finance Compare"
                     }
                   },
                   "Property": "Selected Reference Value"
                 }
               },
-              "queryRef": "MOD Finance Compare Metrics.Selected Reference Value",
+              "queryRef": "MOD Finance Compare.Selected Reference Value",
               "nativeQueryRef": "Selected Reference Value"
             }
           ]
@@ -38,13 +38,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Finance Compare Metrics"
+                      "Entity": "MOD Finance Compare"
                     }
                   },
                   "Property": "Primary vs (Selected) %"
                 }
               },
-              "queryRef": "MOD Finance Compare Metrics.Primary vs (Selected) %",
+              "queryRef": "MOD Finance Compare.Primary vs (Selected) %",
               "nativeQueryRef": "Primary vs (Selected) %"
             }
           ]

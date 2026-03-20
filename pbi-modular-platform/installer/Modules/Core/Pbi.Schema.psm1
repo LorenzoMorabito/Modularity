@@ -275,6 +275,12 @@ function Test-PbiModuleManifestContract {
         elseif ($semanticTables -notcontains $primaryTable) {
             $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.primaryTable" -Message "primaryTable must be declared in provides.semanticTables."))
         }
+        elseif ($primaryTable.StartsWith("_MOD ")) {
+            $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.primaryTable" -Message "primaryTable must be the visible facade table and cannot use the technical _MOD prefix."))
+        }
+        elseif (-not $primaryTable.StartsWith("MOD ")) {
+            $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.primaryTable" -Message "primaryTable must use the MOD facade prefix."))
+        }
 
         if ($hiddenTables.Count -ne $uniqueHiddenTables.Count) {
             $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.hiddenTables" -Message "hiddenTables cannot contain duplicates."))
@@ -283,6 +289,9 @@ function Test-PbiModuleManifestContract {
         foreach ($hiddenTable in $uniqueHiddenTables) {
             if ($semanticTables -notcontains $hiddenTable) {
                 $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.hiddenTables" -Message ("hiddenTable '{0}' must be declared in provides.semanticTables." -f $hiddenTable)))
+            }
+            elseif (-not $hiddenTable.StartsWith("_MOD ")) {
+                $errors.Add((New-PbiSchemaValidationError -Path "$.semanticUx.hiddenTables" -Message ("hiddenTable '{0}' must use the technical _MOD prefix." -f $hiddenTable)))
             }
         }
 

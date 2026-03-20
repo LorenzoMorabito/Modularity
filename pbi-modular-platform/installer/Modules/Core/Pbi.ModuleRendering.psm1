@@ -77,7 +77,7 @@ function New-PbiFlexFlatInputsTemplate {
     param([Parameter(Mandatory = $true)]$MeasureItems)
 
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add("table 'MOD Flex Flat Inputs'")
+    $lines.Add("table 'MOD Flex Flat'")
     $lines.Add("")
 
     for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
@@ -95,7 +95,7 @@ function New-PbiFlexFlatInputsTemplate {
     $lines.Add("`t`tisNameInferred")
     $lines.Add("`t`tsourceColumn: [Column]")
     $lines.Add("")
-    $lines.Add("`tpartition 'MOD Flex Flat Inputs' = calculated")
+    $lines.Add("`tpartition 'MOD Flex Flat' = calculated")
     $lines.Add("`t`tmode: import")
     $lines.Add("`t`tsource = Row(""Column"", BLANK())")
 
@@ -113,7 +113,7 @@ function New-PbiFlexFlatDimensionsTemplate {
     }
 
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add("table 'MOD Flex Flat Dimensions'")
+    $lines.Add("table '_MOD Flex Flat Dimensions'")
     $lines.Add("    isHidden")
     $lines.Add("")
     $lines.Add("    column 'Flat Dimension'")
@@ -142,7 +142,7 @@ function New-PbiFlexFlatDimensionsTemplate {
     $lines.Add("        summarizeBy: none")
     $lines.Add("        sourceColumn: [Value3]")
     $lines.Add("")
-    $lines.Add("    partition 'MOD Flex Flat Dimensions' = calculated")
+    $lines.Add("    partition '_MOD Flex Flat Dimensions' = calculated")
     $lines.Add("        mode: import")
     $lines.Add("        source =")
     $lines.Add("                {")
@@ -159,11 +159,11 @@ function New-PbiFlexFlatMeasuresTemplate {
     for ($index = 0; $index -lt $MeasureItems.Count; $index++) {
         $item = $MeasureItems[$index]
         $measureOrdinal = $index + 1
-        $rows.Add(('                ("{0}", NAMEOF(''MOD Flex Flat Inputs''[Flat Input Metric {1}]), {2})' -f (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)), $measureOrdinal, $index))
+        $rows.Add(('                ("{0}", NAMEOF(''MOD Flex Flat''[Flat Input Metric {1}]), {2})' -f (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)), $measureOrdinal, $index))
     }
 
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add("table 'MOD Flex Flat Measures'")
+    $lines.Add("table '_MOD Flex Flat Measures'")
     $lines.Add("    isHidden")
     $lines.Add("")
     $lines.Add("    column 'Flat Measure'")
@@ -192,7 +192,7 @@ function New-PbiFlexFlatMeasuresTemplate {
     $lines.Add("        summarizeBy: none")
     $lines.Add("        sourceColumn: [Value3]")
     $lines.Add("")
-    $lines.Add("    partition 'MOD Flex Flat Measures' = calculated")
+    $lines.Add("    partition '_MOD Flex Flat Measures' = calculated")
     $lines.Add("        mode: import")
     $lines.Add("        source =")
     $lines.Add("                {")
@@ -206,7 +206,7 @@ function New-PbiFlexPivotInputsTemplate {
     param([Parameter(Mandatory = $true)]$MeasureItems)
 
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add("table 'MOD Flex Table Inputs'")
+    $lines.Add("table '_MOD Flex Pivot Inputs'")
     $lines.Add("`tisHidden")
     $lines.Add("")
 
@@ -224,7 +224,7 @@ function New-PbiFlexPivotInputsTemplate {
     $lines.Add("`t`tisNameInferred")
     $lines.Add("`t`tsourceColumn: [Column]")
     $lines.Add("")
-    $lines.Add("`tpartition 'MOD Flex Table Inputs' = calculated")
+    $lines.Add("`tpartition '_MOD Flex Pivot Inputs' = calculated")
     $lines.Add("`t`tmode: import")
     $lines.Add("`t`tsource = Row(""Column"", BLANK())")
 
@@ -242,7 +242,7 @@ function New-PbiFlexPivotMeasureSelectorTemplate {
     }
 
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add("table 'MOD Flex Table Measure Selector'")
+    $lines.Add("table '_MOD Flex Pivot Selector'")
     $lines.Add("    isHidden")
     $lines.Add("")
     $lines.Add("    column MeasureKey")
@@ -269,7 +269,7 @@ function New-PbiFlexPivotMeasureSelectorTemplate {
     $lines.Add("        isNameInferred")
     $lines.Add("        sourceColumn: [MeasureSort]")
     $lines.Add("")
-    $lines.Add("    partition 'MOD Flex Table Measure Selector' = calculated")
+    $lines.Add("    partition '_MOD Flex Pivot Selector' = calculated")
     $lines.Add("        mode: import")
     $lines.Add('        source = ```')
     $lines.Add("                DATATABLE(")
@@ -309,7 +309,7 @@ function New-PbiFlexPivotAxisTemplate {
     }
 
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add("table 'MOD Flex Table Axis'")
+    $lines.Add("table '_MOD Flex Pivot Axis'")
     $lines.Add("`tisHidden")
     $lines.Add("")
     $lines.Add("`tcolumn DimensionKey")
@@ -336,7 +336,7 @@ function New-PbiFlexPivotAxisTemplate {
     $lines.Add("`t`tisNameInferred")
     $lines.Add("`t`tsourceColumn: [AxisLabel]")
     $lines.Add("")
-    $lines.Add("`tpartition 'MOD Flex Table Axis' = calculated")
+    $lines.Add("`tpartition '_MOD Flex Pivot Axis' = calculated")
     $lines.Add("`t`tmode: import")
     $lines.Add("`t`tsource =")
     $lines.Add("`t`t`t`tUNION(")
@@ -381,13 +381,13 @@ function New-PbiFlexPivotMetricsTemplate {
     }
 
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add("table 'MOD Flex Table Metrics'")
+    $lines.Add("table 'MOD Flex Pivot'")
     $lines.Add("")
     $lines.Add("`tmeasure 'Flex Table Selected Value' =")
     $lines.Add("`t`t")
-    $lines.Add("`t`tVAR SelectedMeasure = SELECTEDVALUE('MOD Flex Table Measure Selector'[MeasureKey])")
-    $lines.Add("`t`tVAR AxisKey = SELECTEDVALUE('MOD Flex Table Axis'[DimensionKey])")
-    $lines.Add("`t`tVAR AxisValue = SELECTEDVALUE('MOD Flex Table Axis'[AxisLabel])")
+    $lines.Add("`t`tVAR SelectedMeasure = SELECTEDVALUE('_MOD Flex Pivot Selector'[MeasureKey])")
+    $lines.Add("`t`tVAR AxisKey = SELECTEDVALUE('_MOD Flex Pivot Axis'[DimensionKey])")
+    $lines.Add("`t`tVAR AxisValue = SELECTEDVALUE('_MOD Flex Pivot Axis'[AxisLabel])")
     $lines.Add("`t`tVAR BaseMetric =")
     $lines.Add("`t`t    SWITCH(")
     $lines.Add("`t`t        SelectedMeasure,")
@@ -406,14 +406,14 @@ function New-PbiFlexPivotMetricsTemplate {
     $lines.Add("`t`t")
     $lines.Add("`t`tVAR NonBlankMeasureCount =")
     $lines.Add("`t`t    SUMX(")
-    $lines.Add("`t`t        VALUES('MOD Flex Table Measure Selector'[MeasureKey]),")
-    $lines.Add("`t`t        VAR CurrentMeasureKey = 'MOD Flex Table Measure Selector'[MeasureKey]")
+    $lines.Add("`t`t        VALUES('_MOD Flex Pivot Selector'[MeasureKey]),")
+    $lines.Add("`t`t        VAR CurrentMeasureKey = '_MOD Flex Pivot Selector'[MeasureKey]")
     $lines.Add("`t`t        RETURN")
     $lines.Add("`t`t            IF(")
     $lines.Add("`t`t                NOT ISBLANK(")
     $lines.Add("`t`t                    CALCULATE(")
     $lines.Add("`t`t                        [Flex Table Selected Value],")
-    $lines.Add("`t`t                        TREATAS({CurrentMeasureKey}, 'MOD Flex Table Measure Selector'[MeasureKey])")
+    $lines.Add("`t`t                        TREATAS({CurrentMeasureKey}, '_MOD Flex Pivot Selector'[MeasureKey])")
     $lines.Add("`t`t                    )")
     $lines.Add("`t`t                ),")
     $lines.Add("`t`t                1,")
@@ -428,10 +428,10 @@ function New-PbiFlexPivotMetricsTemplate {
     $lines.Add("`t`t")
     $lines.Add("`t`tVAR SelectedDimensions =")
     $lines.Add("`t`t    CONCATENATEX(")
-    $lines.Add("`t`t        VALUES('MOD Flex Table Axis'[DimensionLabel]),")
-    $lines.Add("`t`t        'MOD Flex Table Axis'[DimensionLabel],")
+    $lines.Add("`t`t        VALUES('_MOD Flex Pivot Axis'[DimensionLabel]),")
+    $lines.Add("`t`t        '_MOD Flex Pivot Axis'[DimensionLabel],")
     $lines.Add("`t`t        "", "",")
-    $lines.Add("`t`t        'MOD Flex Table Axis'[DimensionSort],")
+    $lines.Add("`t`t        '_MOD Flex Pivot Axis'[DimensionSort],")
     $lines.Add("`t`t        ASC")
     $lines.Add("`t`t    )")
     $lines.Add("`t`tRETURN")
@@ -445,7 +445,7 @@ function New-PbiFlexPivotMetricsTemplate {
     $lines.Add("`t`tisNameInferred")
     $lines.Add("`t`tsourceColumn: [Column]")
     $lines.Add("")
-    $lines.Add("`tpartition 'MOD Flex Table Metrics' = calculated")
+    $lines.Add("`tpartition 'MOD Flex Pivot' = calculated")
     $lines.Add("`t`tmode: import")
     $lines.Add("`t`tsource = Row(""Column"", BLANK())")
 
@@ -458,26 +458,7 @@ function Get-PbiFlexFlatColumnsSlicerContent {
         [Parameter(Mandatory = $true)]$DimensionItems
     )
 
-    $visual = ConvertFrom-PbiJsonText -Text $TemplateContent
-    $selectedItems = @($DimensionItems | Select-Object -First (Get-PbiFlexVisibleCount -ItemCount $DimensionItems.Count -PreferredCount 2))
-    $values = @()
-    $decomposedValues = @()
-    $valueMap = @()
-
-    foreach ($item in $selectedItems) {
-        $bindingTable = Get-PbiFlexDimensionBindingTableName -Item $item
-        $literalValue = ("'''{0}''[Value]'" -f $bindingTable)
-        $values += ,(@([ordered]@{ Literal = [ordered]@{ Value = $literalValue } }))
-        $decomposedValues += ,(@([ordered]@{ "0" = @([ordered]@{ Literal = [ordered]@{ Value = $literalValue } }) }))
-        $valueMap += @([ordered]@{ "0" = (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)) })
-    }
-
-    $whereClause = $visual.visual.objects.general[0].properties.filter.filter.Where[0]
-    $whereClause.Condition.In.Values = $values
-    $whereClause.Annotations.filterExpressionMetadata.decomposedIdentities.values = $decomposedValues
-    $whereClause.Annotations.filterExpressionMetadata.valueMap = $valueMap
-
-    return (ConvertTo-PbiJsonText -InputObject $visual)
+    return $TemplateContent
 }
 
 function Get-PbiFlexFlatMeasuresSlicerContent {
@@ -486,27 +467,7 @@ function Get-PbiFlexFlatMeasuresSlicerContent {
         [Parameter(Mandatory = $true)]$MeasureItems
     )
 
-    $visual = ConvertFrom-PbiJsonText -Text $TemplateContent
-    $selectedItems = @($MeasureItems | Select-Object -First (Get-PbiFlexVisibleCount -ItemCount $MeasureItems.Count -PreferredCount 2))
-    $values = @()
-    $decomposedValues = @()
-    $valueMap = @()
-
-    for ($index = 0; $index -lt $selectedItems.Count; $index++) {
-        $item = $selectedItems[$index]
-        $measureOrdinal = $index + 1
-        $literalValue = ("'''MOD Flex Flat Inputs''[Flat Input Metric {0}]'" -f $measureOrdinal)
-        $values += ,(@([ordered]@{ Literal = [ordered]@{ Value = $literalValue } }))
-        $decomposedValues += ,(@([ordered]@{ "0" = @([ordered]@{ Literal = [ordered]@{ Value = $literalValue } }) }))
-        $valueMap += @([ordered]@{ "0" = (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)) })
-    }
-
-    $whereClause = $visual.visual.objects.general[0].properties.filter.filter.Where[0]
-    $whereClause.Condition.In.Values = $values
-    $whereClause.Annotations.filterExpressionMetadata.decomposedIdentities.values = $decomposedValues
-    $whereClause.Annotations.filterExpressionMetadata.valueMap = $valueMap
-
-    return (ConvertTo-PbiJsonText -InputObject $visual)
+    return $TemplateContent
 }
 
 function Get-PbiFlexFlatTableVisualContent {
@@ -549,13 +510,13 @@ function Get-PbiFlexFlatTableVisualContent {
                     Measure = [ordered]@{
                         Expression = [ordered]@{
                             SourceRef = [ordered]@{
-                                Entity = "MOD Flex Flat Inputs"
+                                Entity = "MOD Flex Flat"
                             }
                         }
                         Property = ("Flat Input Metric {0}" -f $measureOrdinal)
                     }
                 }
-                queryRef = ("MOD Flex Flat Inputs.Flat Input Metric {0}" -f $measureOrdinal)
+                queryRef = ("MOD Flex Flat.Flat Input Metric {0}" -f $measureOrdinal)
                 nativeQueryRef = (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey))
                 displayName = (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey))
             })
@@ -568,7 +529,7 @@ function Get-PbiFlexFlatTableVisualContent {
                 Column = [ordered]@{
                     Expression = [ordered]@{
                         SourceRef = [ordered]@{
-                            Entity = "MOD Flex Flat Dimensions"
+                            Entity = "_MOD Flex Flat Dimensions"
                         }
                     }
                     Property = "Flat Dimension"
@@ -582,7 +543,7 @@ function Get-PbiFlexFlatTableVisualContent {
                 Column = [ordered]@{
                     Expression = [ordered]@{
                         SourceRef = [ordered]@{
-                            Entity = "MOD Flex Flat Measures"
+                            Entity = "_MOD Flex Flat Measures"
                         }
                     }
                     Property = "Flat Measure"
@@ -602,15 +563,7 @@ function Get-PbiFlexPivotDimensionSlicerContent {
         [Parameter(Mandatory = $true)]$DimensionItems
     )
 
-    $visual = ConvertFrom-PbiJsonText -Text $TemplateContent
-    $selectedItems = @($DimensionItems | Select-Object -First (Get-PbiFlexVisibleCount -ItemCount $DimensionItems.Count -PreferredCount 2))
-    $values = @()
-    foreach ($item in $selectedItems) {
-        $values += ,(@([ordered]@{ Literal = [ordered]@{ Value = ("'" + (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)) + "'") } }))
-    }
-
-    $visual.visual.objects.general[0].properties.filter.filter.Where[0].Condition.In.Values = $values
-    return (ConvertTo-PbiJsonText -InputObject $visual)
+    return $TemplateContent
 }
 
 function Get-PbiFlexPivotMeasureSlicerContent {
@@ -619,15 +572,7 @@ function Get-PbiFlexPivotMeasureSlicerContent {
         [Parameter(Mandatory = $true)]$MeasureItems
     )
 
-    $visual = ConvertFrom-PbiJsonText -Text $TemplateContent
-    $selectedItems = @($MeasureItems | Select-Object -First (Get-PbiFlexVisibleCount -ItemCount $MeasureItems.Count -PreferredCount 3))
-    $values = @()
-    foreach ($item in $selectedItems) {
-        $values += ,(@([ordered]@{ Literal = [ordered]@{ Value = ("'" + (Get-PbiBindingTokenLiteral -Property "Label" -BindingKey ([string]$item.bindingKey)) + "'") } }))
-    }
-
-    $visual.visual.objects.general[0].properties.filter.filter.Where[0].Condition.In.Values = $values
-    return (ConvertTo-PbiJsonText -InputObject $visual)
+    return $TemplateContent
 }
 
 function Get-PbiRenderedFlexReportFiles {
@@ -667,9 +612,9 @@ function Get-PbiRenderedFlexFlatSemanticAssets {
     $dimensionItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "dimensions")
     $measureItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "measures")
     $tableTemplates = [ordered]@{
-        "MOD Flex Flat Inputs"     = (New-PbiFlexFlatInputsTemplate -MeasureItems $measureItems)
-        "MOD Flex Flat Dimensions" = (New-PbiFlexFlatDimensionsTemplate -DimensionItems $dimensionItems)
-        "MOD Flex Flat Measures"   = (New-PbiFlexFlatMeasuresTemplate -MeasureItems $measureItems)
+        "MOD Flex Flat"     = (New-PbiFlexFlatInputsTemplate -MeasureItems $measureItems)
+        "_MOD Flex Flat Dimensions" = (New-PbiFlexFlatDimensionsTemplate -DimensionItems $dimensionItems)
+        "_MOD Flex Flat Measures"   = (New-PbiFlexFlatMeasuresTemplate -MeasureItems $measureItems)
     }
 
     $mappings = @()
@@ -717,10 +662,10 @@ function Get-PbiRenderedFlexPivotSemanticAssets {
     $dimensionItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "dimensions")
     $measureItems = @(Get-PbiFlexBindingItems -Manifest $Manifest -ResolvedMappings $ResolvedMappings -CollectionId "measures")
     $tableTemplates = [ordered]@{
-        "MOD Flex Table Inputs"           = (New-PbiFlexPivotInputsTemplate -MeasureItems $measureItems)
-        "MOD Flex Table Measure Selector" = (New-PbiFlexPivotMeasureSelectorTemplate -MeasureItems $measureItems)
-        "MOD Flex Table Axis"             = (New-PbiFlexPivotAxisTemplate -DimensionItems $dimensionItems)
-        "MOD Flex Table Metrics"          = (New-PbiFlexPivotMetricsTemplate -MeasureItems $measureItems -DimensionItems $dimensionItems)
+        "_MOD Flex Pivot Inputs"           = (New-PbiFlexPivotInputsTemplate -MeasureItems $measureItems)
+        "_MOD Flex Pivot Selector" = (New-PbiFlexPivotMeasureSelectorTemplate -MeasureItems $measureItems)
+        "_MOD Flex Pivot Axis"             = (New-PbiFlexPivotAxisTemplate -DimensionItems $dimensionItems)
+        "MOD Flex Pivot"          = (New-PbiFlexPivotMetricsTemplate -MeasureItems $measureItems -DimensionItems $dimensionItems)
     }
 
     $mappings = @()

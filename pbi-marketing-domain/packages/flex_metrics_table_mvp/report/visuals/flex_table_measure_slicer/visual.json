@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Table Measure Selector"
+                      "Entity": "_MOD Flex Pivot Selector"
                     }
                   },
                   "Property": "DisplayLabel"
                 }
               },
-              "queryRef": "MOD Flex Table Measure Selector.DisplayLabel",
+              "queryRef": "_MOD Flex Pivot Selector.DisplayLabel",
               "nativeQueryRef": "DisplayLabel",
               "active": true
             }
@@ -34,69 +34,7 @@
         }
       }
     },
-    "objects": {
-      "general": [
-        {
-          "properties": {
-            "filter": {
-              "filter": {
-                "Version": 2,
-                "From": [
-                  {
-                    "Name": "m",
-                    "Entity": "MOD Flex Table Measure Selector",
-                    "Type": 0
-                  }
-                ],
-                "Where": [
-                  {
-                    "Condition": {
-                      "In": {
-                        "Expressions": [
-                          {
-                            "Column": {
-                              "Expression": {
-                                "SourceRef": {
-                                  "Source": "m"
-                                }
-                              },
-                              "Property": "DisplayLabel"
-                            }
-                          }
-                        ],
-                        "Values": [
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'{{bindingLabel:MOD_BIND_MEASURE_1}}'"
-                              }
-                            }
-                          ],
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'{{bindingLabel:MOD_BIND_MEASURE_2}}'"
-                              }
-                            }
-                          ],
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'{{bindingLabel:MOD_BIND_MEASURE_3}}'"
-                              }
-                            }
-                          ]
-                        ]
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      ]
-    },
+    "objects": {},
     "visualContainerObjects": {
       "title": [
         {

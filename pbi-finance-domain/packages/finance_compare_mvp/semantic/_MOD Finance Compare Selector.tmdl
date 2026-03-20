@@ -1,10 +1,10 @@
-table 'MOD Finance Compare Selector'
+table '_MOD Finance Compare Selector'
 	isHidden
 
 	measure 'Metric Compare (Selected)' =
 			
 			SWITCH(
-			  SELECTEDVALUE('MOD Finance Compare Selector'[CompareKey], "reference_1"),
+			  SELECTEDVALUE('_MOD Finance Compare Selector'[CompareKey], "reference_1"),
 			  "reference_1", [Input Reference Measure 1],
 			  "reference_2", [Input Reference Measure 2]
 			)
@@ -13,7 +13,7 @@ table 'MOD Finance Compare Selector'
 
 	measure 'Metric Compare Label (Selected)' =
 			
-			SELECTEDVALUE('MOD Finance Compare Selector'[Label], "{{bindingLabel:MOD_BIND_REFERENCE_MEASURE_1}}")
+			SELECTEDVALUE('_MOD Finance Compare Selector'[Label], "{{bindingLabel:MOD_BIND_REFERENCE_MEASURE_1}}")
 
 	column CompareKey
 		summarizeBy: none
@@ -29,7 +29,7 @@ table 'MOD Finance Compare Selector'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Finance Compare Selector' = calculated
+	partition '_MOD Finance Compare Selector' = calculated
 		mode: import
 		source = ```
 				

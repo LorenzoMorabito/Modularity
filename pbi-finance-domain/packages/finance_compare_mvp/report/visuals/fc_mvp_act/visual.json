@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Finance Compare Selector"
+                      "Entity": "_MOD Finance Compare Selector"
                     }
                   },
                   "Property": "Metric Compare (Selected)"
                 }
               },
-              "queryRef": "MOD Finance Compare Selector.Metric Compare (Selected)",
+              "queryRef": "_MOD Finance Compare Selector.Metric Compare (Selected)",
               "nativeQueryRef": "Metric Compare (Selected)"
             }
           ]
@@ -38,13 +38,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Finance Compare Inputs"
+                      "Entity": "_MOD Finance Compare Inputs"
                     }
                   },
                   "Property": "Input Primary Measure"
                 }
               },
-              "queryRef": "MOD Finance Compare Inputs.Input Primary Measure",
+              "queryRef": "_MOD Finance Compare Inputs.Input Primary Measure",
               "nativeQueryRef": "Input Primary Measure"
             }
           ]

@@ -1774,7 +1774,7 @@ function Convert-PbiTextWithResolvedMappings {
             },
             [PSCustomObject]@{
                 Pattern     = ("{0}\[{1}\]" -f [regex]::Escape($sourceColumn.TableName), [regex]::Escape($sourceColumn.ColumnName))
-                Replacement = ($targetColumn.TableName + "[" + $targetColumn.ColumnName + "]")
+                Replacement = ($targetTableQuoted + "[" + $targetColumn.ColumnName + "]")
             },
             [PSCustomObject]@{
                 Pattern     = [regex]::Escape($sourceColumn.QueryReference)

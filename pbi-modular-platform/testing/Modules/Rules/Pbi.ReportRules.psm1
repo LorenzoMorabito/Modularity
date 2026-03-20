@@ -126,6 +126,33 @@ function Get-PbiVisualProjectionReferenceIssues {
     return $results.ToArray()
 }
 
+function Get-PbiVisualStaticSlicerFilterIssues {
+    param(
+        [Parameter(Mandatory = $true)]$VisualDefinition,
+        [Parameter(Mandatory = $true)][string]$Scope,
+        [Parameter(Mandatory = $true)][string]$Target,
+        [Parameter(Mandatory = $true)][string]$VisualPath
+    )
+
+    $results = New-Object System.Collections.Generic.List[object]
+    if (-not $VisualDefinition.visual -or $VisualDefinition.visual.visualType -ne "slicer") {
+        return $results.ToArray()
+    }
+
+    if (-not $VisualDefinition.visual.objects -or -not ($VisualDefinition.visual.objects.PSObject.Properties.Name -contains "general")) {
+        return $results.ToArray()
+    }
+
+    foreach ($generalObject in @($VisualDefinition.visual.objects.general)) {
+        if ($generalObject.properties -and ($generalObject.properties.PSObject.Properties.Name -contains "filter") -and $generalObject.properties.filter.filter) {
+            $results.Add((New-PbiQualityResult -Scope $Scope -Target $Target -RuleId "report.slicer.static-filter.forbidden" -Severity "Error" -Message "Slicer visual ships with a static general.filter payload. Package slicers must derive available options from semantic selector tables instead of serialized visual filter state." -Path $VisualPath))
+            break
+        }
+    }
+
+    return $results.ToArray()
+}
+
 function Test-PbiNestedVisualValueCollection {
     param($Value)
 
@@ -181,6 +208,10 @@ function Get-PbiVisualFieldParameterSlicerShapeIssues {
     }
 
     if ($projectedParameterTables.Count -eq 0) {
+        return $results.ToArray()
+    }
+
+    if (-not $VisualDefinition.visual.objects -or -not ($VisualDefinition.visual.objects.PSObject.Properties.Name -contains "general")) {
         return $results.ToArray()
     }
 
@@ -262,6 +293,9 @@ function Get-PbiRenderedModuleReportIssues {
                     foreach ($issue in (Get-PbiVisualProjectionReferenceIssues -VisualDefinition $renderedDefinition -Scope "Module" -Target $Module.ModuleId -VisualPath $renderedPath)) {
                         $results.Add($issue)
                     }
+                    foreach ($issue in (Get-PbiVisualStaticSlicerFilterIssues -VisualDefinition $renderedDefinition -Scope "Module" -Target $Module.ModuleId -VisualPath $renderedPath)) {
+                        $results.Add($issue)
+                    }
                     foreach ($issue in (Get-PbiVisualFieldParameterSlicerShapeIssues -VisualDefinition $renderedDefinition -FieldParameterTables $parameterTables -Scope "Module" -Target $Module.ModuleId -VisualPath $renderedPath)) {
                         $results.Add($issue)
                     }
@@ -320,6 +354,9 @@ function Invoke-PbiModuleReportRules {
                 $results.Add($issue)
             }
             foreach ($issue in (Get-PbiVisualFieldParameterSlicerShapeIssues -VisualDefinition $visualDefinition -FieldParameterTables $parameterTables -Scope "Module" -Target $Module.ModuleId -VisualPath $visualFile.FullName)) {
+                $results.Add($issue)
+            }
+            foreach ($issue in (Get-PbiVisualStaticSlicerFilterIssues -VisualDefinition $visualDefinition -Scope "Module" -Target $Module.ModuleId -VisualPath $visualFile.FullName)) {
                 $results.Add($issue)
             }
             foreach ($issue in (Get-PbiVisualProjectionReferenceIssues -VisualDefinition $visualDefinition -Scope "Module" -Target $Module.ModuleId -VisualPath $visualFile.FullName)) {
@@ -403,6 +440,9 @@ function Invoke-PbiProjectReportRules {
                 $results.Add($issue)
             }
             foreach ($issue in (Get-PbiVisualFieldParameterSlicerShapeIssues -VisualDefinition $visualDefinition -FieldParameterTables $parameterTables -Scope "Project" -Target $Project.ProjectId -VisualPath $visualFile.FullName)) {
+                $results.Add($issue)
+            }
+            foreach ($issue in (Get-PbiVisualStaticSlicerFilterIssues -VisualDefinition $visualDefinition -Scope "Project" -Target $Project.ProjectId -VisualPath $visualFile.FullName)) {
                 $results.Add($issue)
             }
             foreach ($issue in (Get-PbiVisualProjectionReferenceIssues -VisualDefinition $visualDefinition -Scope "Project" -Target $Project.ProjectId -VisualPath $visualFile.FullName)) {

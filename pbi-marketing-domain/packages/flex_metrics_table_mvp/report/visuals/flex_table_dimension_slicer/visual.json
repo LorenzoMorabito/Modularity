@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Flex Table Axis"
+                      "Entity": "_MOD Flex Pivot Axis"
                     }
                   },
                   "Property": "DimensionLabel"
                 }
               },
-              "queryRef": "MOD Flex Table Axis.DimensionLabel",
+              "queryRef": "_MOD Flex Pivot Axis.DimensionLabel",
               "nativeQueryRef": "DimensionLabel",
               "active": true
             }
@@ -56,60 +56,6 @@
                 "Literal": {
                   "Value": "false"
                 }
-              }
-            }
-          }
-        }
-      ],
-      "general": [
-        {
-          "properties": {
-            "filter": {
-              "filter": {
-                "Version": 2,
-                "From": [
-                  {
-                    "Name": "a",
-                    "Entity": "MOD Flex Table Axis",
-                    "Type": 0
-                  }
-                ],
-                "Where": [
-                  {
-                    "Condition": {
-                      "In": {
-                        "Expressions": [
-                          {
-                            "Column": {
-                              "Expression": {
-                                "SourceRef": {
-                                  "Source": "a"
-                                }
-                              },
-                              "Property": "DimensionLabel"
-                            }
-                          }
-                        ],
-                        "Values": [
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'{{bindingLabel:MOD_BIND_DIMENSION_1[Value]}}'"
-                              }
-                            }
-                          ],
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'{{bindingLabel:MOD_BIND_DIMENSION_2[Value]}}'"
-                              }
-                            }
-                          ]
-                        ]
-                      }
-                    }
-                  }
-                ]
               }
             }
           }

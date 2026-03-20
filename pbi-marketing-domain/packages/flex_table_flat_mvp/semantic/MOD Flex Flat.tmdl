@@ -1,4 +1,4 @@
-table 'MOD Flex Flat Inputs'
+table 'MOD Flex Flat'
 	lineageTag: 5368ec49-437f-4302-a749-1e2c93323d3e
 
 	measure 'Flat Input Metric 1' = [MOD_BIND_MEASURE_1]
@@ -67,6 +67,6 @@ table 'MOD Flex Flat Inputs'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Flex Flat Inputs' = calculated
+	partition 'MOD Flex Flat' = calculated
 		mode: import
 		source = Row("Column", BLANK())

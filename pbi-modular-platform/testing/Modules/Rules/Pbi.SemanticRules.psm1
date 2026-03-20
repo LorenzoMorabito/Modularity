@@ -113,6 +113,71 @@ function Get-PbiTmdlLiteralEscapeFindingsFromDirectory {
     return $results.ToArray()
 }
 
+function Get-PbiUnquotedSpacedTableReferenceFindingsFromText {
+    param(
+        [Parameter(Mandatory = $true)][string]$Text,
+        [Parameter(Mandatory = $true)][string]$Scope,
+        [Parameter(Mandatory = $true)][string]$Target,
+        [Parameter(Mandatory = $true)][string]$RuleId,
+        [Parameter(Mandatory = $true)][string]$Path
+    )
+
+    $results = New-Object System.Collections.Generic.List[object]
+    $referencePattern = "(?<!')\b([A-Za-z_][A-Za-z0-9_]*(?: [A-Za-z_][A-Za-z0-9_]*)+)\[([^\]\r\n]+)\]"
+    $lines = $Text -split "\r?\n"
+
+    for ($lineIndex = 0; $lineIndex -lt $lines.Count; $lineIndex++) {
+        $line = [string]$lines[$lineIndex]
+        $matches = [regex]::Matches($line, $referencePattern)
+        if ($matches.Count -eq 0) {
+            continue
+        }
+
+        $references = @($matches | ForEach-Object { $_.Value } | Select-Object -Unique)
+        $excerpt = $line.Trim()
+        if ([string]::IsNullOrWhiteSpace($excerpt)) {
+            $excerpt = $line
+        }
+
+        if ($excerpt.Length -gt 160) {
+            $excerpt = $excerpt.Substring(0, 160) + "..."
+        }
+
+        $results.Add((New-PbiQualityResult `
+                -Scope $Scope `
+                -Target $Target `
+                -RuleId $RuleId `
+                -Severity "Error" `
+                -Message ("TMDL contains unquoted DAX table reference(s) with spaces on line {0}: {1}" -f ($lineIndex + 1), ($references -join ", ")) `
+                -Path $Path))
+    }
+
+    return $results.ToArray()
+}
+
+function Get-PbiUnquotedSpacedTableReferenceFindingsFromDirectory {
+    param(
+        [Parameter(Mandatory = $true)][string]$RootPath,
+        [Parameter(Mandatory = $true)][string]$Scope,
+        [Parameter(Mandatory = $true)][string]$Target,
+        [Parameter(Mandatory = $true)][string]$RuleId
+    )
+
+    $results = New-Object System.Collections.Generic.List[object]
+    if (-not (Test-Path $RootPath)) {
+        return $results.ToArray()
+    }
+
+    foreach ($file in (Get-ChildItem -Path $RootPath -Recurse -Filter "*.tmdl" -File -ErrorAction SilentlyContinue)) {
+        $content = Get-Content -Path $file.FullName -Raw
+        foreach ($issue in (Get-PbiUnquotedSpacedTableReferenceFindingsFromText -Text $content -Scope $Scope -Target $Target -RuleId $RuleId -Path $file.FullName)) {
+            $results.Add($issue)
+        }
+    }
+
+    return $results.ToArray()
+}
+
 function Get-PbiUnresolvedBindingTokenFindingsFromText {
     param(
         [Parameter(Mandatory = $true)][string]$Text,
@@ -236,10 +301,19 @@ function Get-PbiSemanticUxFindingsFromTableMap {
             $results.Add((New-PbiQualityResult -Scope $Scope -Target $Target -RuleId "semantic.table-visibility.standard" -Severity "Error" -Message ("Table '{0}' is declared as hidden in semanticUx but does not declare table-level isHidden immediately after the table header." -f $tableName) -Path $path))
         }
 
+        if (($hiddenTables -contains $tableName) -and (-not $tableName.StartsWith("_MOD "))) {
+            $results.Add((New-PbiQualityResult -Scope $Scope -Target $Target -RuleId "semantic.table-visibility.standard" -Severity "Error" -Message ("Hidden technical table '{0}' must use the _MOD prefix." -f $tableName) -Path $path))
+        }
+
         if (($tableName -eq $primaryTable) -and $hasImmediateHiddenFlag) {
             $results.Add((New-PbiQualityResult -Scope $Scope -Target $Target -RuleId "semantic.table-visibility.standard" -Severity "Error" -Message ("Primary semantic table '{0}' must remain visible and cannot declare table-level isHidden." -f $tableName) -Path $path))
         }
+
+        if (($tableName -eq $primaryTable) -and $tableName.StartsWith("_MOD ")) {
+            $results.Add((New-PbiQualityResult -Scope $Scope -Target $Target -RuleId "semantic.table-visibility.standard" -Severity "Error" -Message ("Primary semantic table '{0}' must be the visible facade table and cannot use the _MOD prefix." -f $tableName) -Path $path))
+        }
     }
+
 
     return $results.ToArray()
 }
@@ -324,6 +398,10 @@ function Get-PbiRenderedModuleSemanticFindings {
         foreach ($asset in $renderedAssets) {
             $renderedPath = ("rendered::{0}.tmdl" -f $asset.TableName)
             foreach ($issue in (Get-PbiTmdlLiteralEscapeFindingsFromText -Text ([string]$asset.SourceContent) -Scope "Module" -Target $Module.ModuleId -RuleId "semantic.tmdl.rendered.literal-escape.forbidden" -Path $renderedPath)) {
+                $results.Add($issue)
+            }
+
+            foreach ($issue in (Get-PbiUnquotedSpacedTableReferenceFindingsFromText -Text ([string]$asset.SourceContent) -Scope "Module" -Target $Module.ModuleId -RuleId "semantic.dax.spaced-table-reference.quoted" -Path $renderedPath)) {
                 $results.Add($issue)
             }
 
@@ -416,6 +494,10 @@ function Invoke-PbiModuleSemanticRules {
         $results.Add($result)
     }
 
+    foreach ($result in (Get-PbiUnquotedSpacedTableReferenceFindingsFromDirectory -RootPath $tableDirectory -Scope "Module" -Target $Module.ModuleId -RuleId "semantic.dax.spaced-table-reference.quoted")) {
+        $results.Add($result)
+    }
+
     foreach ($result in (Get-PbiModuleSemanticUxFindings -Module $Module)) {
         $results.Add($result)
     }
@@ -445,6 +527,10 @@ function Invoke-PbiProjectSemanticRules {
     }
 
     foreach ($result in (Get-PbiTmdlLiteralEscapeFindingsFromDirectory -RootPath (Join-Path $Project.SemanticModelPath "definition") -Scope "Project" -Target $Project.ProjectId -RuleId "semantic.tmdl.literal-escape.forbidden")) {
+        $results.Add($result)
+    }
+
+    foreach ($result in (Get-PbiUnquotedSpacedTableReferenceFindingsFromDirectory -RootPath (Join-Path $Project.SemanticModelPath "definition") -Scope "Project" -Target $Project.ProjectId -RuleId "semantic.dax.spaced-table-reference.quoted")) {
         $results.Add($result)
     }
 

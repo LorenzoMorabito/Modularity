@@ -1,4 +1,4 @@
-table 'MOD Flex Table Inputs'
+table '_MOD Flex Pivot Inputs'
 	isHidden
 	lineageTag: e3d3436e-43d8-4c20-95bd-e4dd73eb61d6
 
@@ -58,6 +58,6 @@ table 'MOD Flex Table Inputs'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Flex Table Inputs' = calculated
+	partition '_MOD Flex Pivot Inputs' = calculated
 		mode: import
 		source = Row("Column", BLANK())

@@ -11,8 +11,8 @@ function Invoke-PbiModuleArchitectureRules {
             $results.Add((New-PbiQualityResult -Scope "Module" -Target $Module.ModuleId -RuleId "architecture.module.core-table.forbidden" -Severity "Error" -Message ("Module declares semantic table '{0}', but that table belongs to the semantic core contract." -f $tableName) -Path (Join-Path $Module.PackageRoot "manifest.json")))
         }
 
-        if ($tableName -notlike "MOD *") {
-            $results.Add((New-PbiQualityResult -Scope "Module" -Target $Module.ModuleId -RuleId "architecture.module.semantic-namespace.required" -Severity "Error" -Message ("Semantic table '{0}' must stay in the MOD namespace." -f $tableName) -Path (Join-Path $Module.PackageRoot "manifest.json")))
+        if (($tableName -notlike "MOD *") -and ($tableName -notlike "_MOD *")) {
+            $results.Add((New-PbiQualityResult -Scope "Module" -Target $Module.ModuleId -RuleId "architecture.module.semantic-namespace.required" -Severity "Error" -Message ("Semantic table '{0}' must stay in the MOD or _MOD package namespace." -f $tableName) -Path (Join-Path $Module.PackageRoot "manifest.json")))
         }
     }
 

@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "MOD Finance Compare Selector"
+                      "Entity": "_MOD Finance Compare Selector"
                     }
                   },
                   "Property": "CompareKey"
                 }
               },
-              "queryRef": "MOD Finance Compare Selector.CompareKey",
+              "queryRef": "_MOD Finance Compare Selector.CompareKey",
               "nativeQueryRef": "CompareKey",
               "active": true
             }
@@ -56,53 +56,6 @@
                 "Literal": {
                   "Value": "true"
                 }
-              }
-            }
-          }
-        }
-      ],
-      "general": [
-        {
-          "properties": {
-            "filter": {
-              "filter": {
-                "Version": 2,
-                "From": [
-                  {
-                    "Name": "s",
-                    "Entity": "MOD Finance Compare Selector",
-                    "Type": 0
-                  }
-                ],
-                "Where": [
-                  {
-                    "Condition": {
-                      "In": {
-                        "Expressions": [
-                          {
-                            "Column": {
-                              "Expression": {
-                                "SourceRef": {
-                                  "Source": "s"
-                                }
-                              },
-                              "Property": "CompareKey"
-                            }
-                          }
-                        ],
-                        "Values": [
-                          [
-                            {
-                              "Literal": {
-                                "Value": "'reference_1'"
-                              }
-                            }
-                          ]
-                        ]
-                      }
-                    }
-                  }
-                ]
               }
             }
           }

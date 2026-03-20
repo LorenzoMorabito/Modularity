@@ -1,4 +1,4 @@
-table 'MOD Flex Table Measure Selector'
+table '_MOD Flex Pivot Selector'
 	isHidden
 	lineageTag: e96317e4-8ed8-4ad2-a8c1-b6bd06fc4e0f
 
@@ -34,7 +34,7 @@ table 'MOD Flex Table Measure Selector'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Flex Table Measure Selector' = calculated
+	partition '_MOD Flex Pivot Selector' = calculated
 		mode: import
 		source = ```
 				DATATABLE(

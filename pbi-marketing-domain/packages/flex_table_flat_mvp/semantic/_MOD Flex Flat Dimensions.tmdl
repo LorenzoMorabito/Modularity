@@ -1,4 +1,4 @@
-table 'MOD Flex Flat Dimensions'
+table '_MOD Flex Flat Dimensions'
 	isHidden
 	lineageTag: 92ac6f5d-ed1a-4aeb-a2f0-f68b4f9a2c65
 
@@ -37,7 +37,7 @@ table 'MOD Flex Flat Dimensions'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'MOD Flex Flat Dimensions' = calculated
+	partition '_MOD Flex Flat Dimensions' = calculated
 		mode: import
 		source =
 				{
