@@ -14,6 +14,8 @@ Platform tecnica condivisa per package Power BI modulari.
 
 - `installer/`
   entry point PowerShell e servizi di installazione
+- `authoring/`
+  sandbox semantic di authoring e sync pack <-> modello autore
 - `testing/`
   quality framework e smoke checks
 - `schemas/`
@@ -45,6 +47,8 @@ Capabilita implementate:
 - `smoke-install`
 - `Invoke-PbiModularity.ps1`
 - `new-module`
+- `new-authoring-model`
+- `sync-pack-from-authoring`
 
 Governance implementata:
 
@@ -69,6 +73,7 @@ Design evolutivi documentati:
 - [docs/interactive-binding-design.md](./docs/interactive-binding-design.md)
 - [docs/package-semantic-standard.md](./docs/package-semantic-standard.md)
 - [docs/package-documentation-standard.md](./docs/package-documentation-standard.md)
+- [docs/authoring-workflow.md](./docs/authoring-workflow.md)
 
 ## Posizionamento nella repo
 

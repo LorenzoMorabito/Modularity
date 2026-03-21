@@ -52,6 +52,8 @@ Capabilita oggi operative della platform:
 - `smoke-install`
 - `Invoke-PbiModularity.ps1` wrapper CLI
 - generator `new-module`
+- `new-authoring-model` per generare un sandbox `.SemanticModel` isolato dal pack
+- `sync-pack-from-authoring` per riportare nel package le modifiche fatte nel sandbox autore
 
 ## Documentazione package
 

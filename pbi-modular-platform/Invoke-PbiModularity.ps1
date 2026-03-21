@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("list", "install", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles")]
+    [ValidateSet("list", "install", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles", "new-authoring-model", "sync-pack-from-authoring")]
     [string]$Command,
 
     [string]$WorkspaceRoot,
@@ -13,6 +13,7 @@ param(
     [string]$SaveBindingProfileAs,
     [string]$SnapshotId,
     [string]$OutputRoot,
+    [string]$AuthoringPath,
     [string]$DisplayName,
     [ValidateSet("report-only", "semantic")]
     [string]$Type = "semantic",
@@ -31,6 +32,7 @@ $platformRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $installerScript = Join-Path $platformRoot "installer/Invoke-PbiModuleInstaller.ps1"
 $qualityScript = Join-Path $platformRoot "testing/Invoke-PbiQualityChecks.ps1"
 $generatorScript = Join-Path $platformRoot "scaffolding/New-PbiModuleTemplate.ps1"
+$authoringScript = Join-Path $platformRoot "authoring/Invoke-PbiModuleAuthoring.ps1"
 
 switch ($Command) {
     "list" {
@@ -91,5 +93,11 @@ switch ($Command) {
         }
 
         & $generatorScript @generatorParams
+    }
+    "new-authoring-model" {
+        & $authoringScript -Command new-authoring-model -WorkspaceRoot $WorkspaceRoot -Domain $Domain -ModuleId $ModuleId -AuthoringPath $AuthoringPath -Force:$Force
+    }
+    "sync-pack-from-authoring" {
+        & $authoringScript -Command sync-pack-from-authoring -WorkspaceRoot $WorkspaceRoot -Domain $Domain -ModuleId $ModuleId -AuthoringPath $AuthoringPath
     }
 }
