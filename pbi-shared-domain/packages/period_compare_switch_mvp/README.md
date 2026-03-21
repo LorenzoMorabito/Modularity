@@ -1,27 +1,60 @@
 # Period Compare Switch MVP
 
-First-wave semantic extraction from the legacy `SwitchPeriodMode` logic.
+<!-- PBI_PACKAGE_README_STANDARD_V1 -->
 
-## Purpose
+## Cos'e questo modulo
 
-Provide a reusable selector that switches between:
+Questo modulo installa nel modello Power BI un selettore riusabile per passare da un confronto di breve periodo a un confronto rolling piu ampio.
 
-- a short-horizon metric pair
-- a rolling-horizon metric pair
+Serve a standardizzare il cambio di orizzonte analitico senza dover riscrivere ogni volta misure e logiche di visualizzazione.
 
-and exposes selected current, selected reference, delta, and delta percent.
+## Cosa fa
 
-## Bindings
+Il modulo mette a disposizione una logica che sceglie tra due coppie di misure:
 
-- `MOD_BIND_SHORT_CURRENT_MEASURE`
-- `MOD_BIND_SHORT_REFERENCE_MEASURE`
-- `MOD_BIND_LONG_CURRENT_MEASURE`
-- `MOD_BIND_LONG_REFERENCE_MEASURE`
+- corrente e riferimento per orizzonte breve
+- corrente e riferimento per orizzonte rolling
 
-## Legacy source
+Da questa scelta ricava anche delta e delta percentuale, cosi lo stesso visual puo cambiare modalita di lettura in modo coerente.
 
-- `SwitchPeriodMode`
+## Cosa fornisce
 
-## Notes
+- la tabella visibile `MOD Period Compare`
+- una logica pronta per switch breve vs rolling
+- output riusabili per current, reference, delta e delta percent
 
-This first MVP extracts the semantic logic only. The visible table already exposes the period mode selector, so consumer authors can bind slicers and visuals directly on top of the installed table.
+## Quando utilizzarlo
+
+Usalo quando vuoi far scegliere all'utente se leggere il KPI su un periodo breve o su un periodo piu ampio senza cambiare pagina o visual.
+
+E adatto a casi come:
+
+- confronto mese vs anno mobile
+- short term vs long term performance
+- analisi dove il concetto di confronto cambia ma la UX deve restare stabile
+
+## Requisiti
+
+Per usarlo correttamente servono:
+
+- una misura corrente short term
+- una misura riferimento short term
+- una misura corrente rolling
+- una misura riferimento rolling
+
+## Quando non utilizzarlo
+
+Non e il modulo giusto se:
+
+- hai un solo orizzonte di confronto
+- non hai gia disponibili le quattro misure richieste
+- ti serve un compare multi-metrica piu articolato
+
+## Installazione rapida
+
+1. esegui `suggest-bindings` e associa le due coppie di misure short e rolling
+2. salva il profilo di binding ed esegui `validate`
+3. esegui `install`
+4. esegui `test`
+
+Per dettagli tecnici, parametri CLI, asset installati e limiti usare anche `PACKAGE.md`.

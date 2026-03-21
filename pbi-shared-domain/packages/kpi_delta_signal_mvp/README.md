@@ -1,21 +1,54 @@
 # KPI Delta Signal MVP
 
-Micro-package estratto dal blocco legacy `KpiColorLabel`.
+<!-- PBI_PACKAGE_README_STANDARD_V1 -->
 
-## Obiettivo
+## Cos'e questo modulo
 
-- formattare una misura delta con freccia e percentuale
-- esporre un colore hex coerente per la conditional formatting
-- classificare il trend in `positive / negative / neutral`
+Questo modulo installa nel modello Power BI un helper semantico leggero per trasformare una misura delta in un segnale leggibile con label, freccia e colore.
 
-## Bindings
+E un micro-package pensato per standardizzare il modo in cui i delta KPI vengono mostrati nei report.
 
-- `MOD_BIND_DELTA_MEASURE`
+## Cosa fa
 
-## Output semantic
+Il modulo prende una misura delta e la classifica come positiva, negativa o neutra.
 
-- tabella visibile: `MOD KPI Signal`
+Da questa logica ricava una label formattata e un colore coerente da usare in card, KPI, small multiples o conditional formatting.
 
-## Note
+## Cosa fornisce
 
-Il package e intenzionalmente minimo: serve come helper di presentazione riusabile per card, KPI e small multiples.
+- la tabella visibile `MOD KPI Signal`
+- una logica riusabile per label e colore del delta
+- un componente semplice da collegare a card e KPI esistenti
+
+## Quando utilizzarlo
+
+Usalo quando vuoi rendere uniforme la lettura dei delta nei report e non vuoi ricostruire ogni volta freccia, colore e semaforizzazione.
+
+E adatto a casi come:
+
+- KPI di crescita o calo
+- confronto vs previous year
+- visual con conditional formatting standardizzata
+
+## Requisiti
+
+Per usarlo correttamente serve:
+
+- una misura delta o percentuale delta gia disponibile nel consumer
+
+## Quando non utilizzarlo
+
+Non e il modulo giusto se:
+
+- ti serve una logica completa di confronto tra periodi
+- non hai gia una misura delta affidabile
+- ti aspetti una pagina report o un benchmark completo
+
+## Installazione rapida
+
+1. esegui `suggest-bindings` e associa la misura delta
+2. salva il profilo di binding ed esegui `validate`
+3. esegui `install`
+4. esegui `test`
+
+Per dettagli tecnici, parametri CLI, asset installati e limiti usare anche `PACKAGE.md`.

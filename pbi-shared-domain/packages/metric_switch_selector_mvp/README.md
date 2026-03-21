@@ -1,25 +1,56 @@
 # Metric Switch Selector MVP
 
-First-wave semantic extraction from the duplicated selector tables in the legacy Product Analysis POC.
+<!-- PBI_PACKAGE_README_STANDARD_V1 -->
 
-## Purpose
+## Cos'e questo modulo
 
-Provide a reusable metric switch table with:
+Questo modulo installa nel modello Power BI un selettore riusabile di metriche, pensato per permettere all'utente di cambiare KPI senza duplicare visual e pagine.
 
-- a collection-bound list of measures
-- selected metric value output
-- selected metric label output
+Non aggiunge un report pronto, ma un layer semantico leggero e molto riusabile.
 
-## Bindings
+## Cosa fa
 
-- collection `measures`
+Il modulo costruisce una lista di metriche selezionabili e mette a disposizione il valore e la label della metrica scelta.
 
-## Legacy source
+In questo modo puoi usare lo stesso visual per mostrare KPI diversi, lasciando all'utente la scelta di cosa vedere.
 
-- `SwitchMeasureSelector (Sales)`
-- `SwitchMeasureSelector (Promo)`
-- `SwitchCompetitiveMeasureSelector`
+## Cosa fornisce
 
-## Notes
+- la tabella visibile `MOD Metric Switch`
+- la tabella tecnica `_MOD Metric Switch Inputs`
+- una logica pronta per selettori di misura riusabili
+- output utili per valore selezionato e label selezionata
 
-This package introduces the `metric-switch` rendering strategy so the selector rows are generated from the actual measure list chosen by the user.
+## Quando utilizzarlo
+
+Usalo quando vuoi evitare di duplicare visual quasi uguali per mostrare KPI diversi.
+
+E adatto a casi come:
+
+- switch tra vendite, volumi, quota o spesa
+- pagine con un solo chart ma piu KPI possibili
+- report dove l'utente deve cambiare metrica mantenendo la stessa UX
+
+## Requisiti
+
+Per usarlo correttamente serve:
+
+- un insieme di misure candidate da esporre nel selettore
+- almeno una misura scelta durante il binding
+
+## Quando non utilizzarlo
+
+Non e il modulo giusto se:
+
+- il KPI da mostrare e sempre uno solo
+- non vuoi lasciare scelta all'utente
+- ti serve un benchmark o una logica competitiva, non solo uno switch di misura
+
+## Installazione rapida
+
+1. esegui `suggest-bindings` e scegli il set di misure da esporre nel selettore
+2. salva il profilo di binding ed esegui `validate`
+3. esegui `install`
+4. esegui `test`
+
+Per dettagli tecnici, parametri CLI, asset installati e limiti usare anche `PACKAGE.md`.

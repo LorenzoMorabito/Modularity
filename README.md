@@ -55,12 +55,17 @@ Capabilita oggi operative della platform:
 
 ## Documentazione package
 
-Ogni package installabile deve esporre una scheda locale `PACKAGE.md` nella propria cartella con:
+Ogni package installabile deve esporre entrambi i file locali `README.md` e `PACKAGE.md` nella propria cartella.
 
-- funzionalita e limiti del modulo
+Il contratto documentale minimo copre:
+
+- descrizione business del modulo e casi d'uso
+- requisiti e limiti dichiarati
 - binding e parametri richiesti
 - asset installati nel consumer
 - procedura corretta di validazione, installazione e test
+
+Per i nuovi package, `new-module` genera gia i template documentali standard. I quality checks falliscono se i file obbligatori mancano o restano con placeholder non completati.
 
 ## Regola operativa
 

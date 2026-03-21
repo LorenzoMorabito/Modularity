@@ -2,6 +2,16 @@ function Get-PbiQualityRuleCatalog {
     return @(
         [PSCustomObject]@{ Scope = "Module"; RuleId = "module.manifest.valid"; Description = "Required manifest properties are present."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "module.manifest.schema"; Description = "Manifest conforms to the governed schema and cross-field contract."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.readme.exists"; Description = "Every installable module ships a local README.md."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.readme.nonempty"; Description = "README.md is not empty."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.readme.placeholder.forbidden"; Description = "README.md does not keep scaffold placeholders or TODO markers."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.readme.sections.required"; Description = "README.md generated with the standard template keeps the required business-facing sections."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.readme.structure.standard"; Description = "README.md generated with the standard template keeps the exact approved section order."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.package.exists"; Description = "Every installable module ships a local PACKAGE.md install sheet."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.package.nonempty"; Description = "PACKAGE.md is not empty."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.package.placeholder.forbidden"; Description = "PACKAGE.md does not keep scaffold placeholders or TODO markers."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.package.sections.required"; Description = "PACKAGE.md keeps the required install-sheet sections."; Severity = "Error" },
+        [PSCustomObject]@{ Scope = "Module"; RuleId = "module.documentation.package.structure.standard"; Description = "PACKAGE.md keeps the exact approved install-sheet section order."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "module.semantic-table.exists"; Description = "Every declared semantic table file exists."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "module.report-page.exists"; Description = "Declared report page assets exist."; Severity = "Error" },
         [PSCustomObject]@{ Scope = "Module"; RuleId = "architecture.module.core-table.forbidden"; Description = "Modules do not declare semantic tables reserved for the semantic core contract."; Severity = "Error" },
@@ -103,6 +113,10 @@ function Invoke-PbiModuleQualityChecks {
 
     foreach ($module in $modules) {
         foreach ($result in (Invoke-PbiModuleManifestRules -Module $module)) {
+            $results.Add($result)
+        }
+
+        foreach ($result in (Invoke-PbiModuleDocumentationRules -Module $module)) {
             $results.Add($result)
         }
 

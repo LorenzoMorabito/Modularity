@@ -1,42 +1,62 @@
 # TopN Target Driver Bundle MVP
 
-Bundle estratto dal cluster legacy `TopN` + `Dim_Entity` + `SwitchTopByDimension` + `SwitchTopByMesure`, con semantic model e report UX riusabile.
+<!-- PBI_PACKAGE_README_STANDARD_V1 -->
 
-## Obiettivo
+## Cos'e questo modulo
 
-- selezionare una metrica di ranking
-- selezionare il grain da ordinare
-- opzionalmente fissare un target da mantenere sempre in vista
-- esporre misure riusabili per rank, inclusione nel set TopN e highlight del target
-- installare una pagina report pronta con slicer e driver table
+Questo modulo installa nel modello Power BI un bundle riusabile per analisi Top N, ranking dinamico e target entity, con una pagina report starter gia inclusa.
 
-## Binding
+E pensato per dare all'utente il controllo su quale dimensione ordinare, con quale metrica e con quale target mantenere il focus.
 
-- collection `dimensions`
-  colonne candidabili come grain di ranking e come target entity
-- collection `measures`
-  metriche disponibili per il ranking
+## Cosa fa
 
-## Output semantic
+Il modulo permette di:
 
-- tabella visibile: `MOD TopN Driver`
-- tabelle tecniche nascoste:
-  - `_MOD TopN Driver Inputs`
-  - `_MOD TopN Driver Grains`
-  - `_MOD TopN Driver Metrics`
-  - `_MOD TopN Driver Targets`
-  - `_MOD TopN Driver N`
+- scegliere il grain da ordinare
+- scegliere la metrica di ranking
+- selezionare opzionalmente una entita target
+- definire il valore di `Top N`
 
-## Output report
+Su questa base costruisce il set Top N risultante e rende disponibile una pagina report tecnica per testare subito il comportamento.
 
-- pagina: `TopN Target Driver`
-- slicer inclusi:
-  - grain
-  - ranking metric
-  - target entity
-  - Top N
-- tabella driver filtrata sul set TopN risultante
+## Cosa fornisce
 
-## Note
+- la tabella visibile `MOD TopN Driver`
+- tabelle tecniche per input, grains, metriche, target e valore Top N
+- una pagina report starter `TopN Target Driver`
+- una logica riusabile per ranking dinamico e focus su target entity
 
-Il grain selector e implementato come field-parameter table, quindi il bundle resta generalista e puo cambiare asse senza dipendere dallo schema del consumer.
+## Quando utilizzarlo
+
+Usalo quando vuoi un modulo flessibile per classifiche dinamiche, analisi top entity e confronto con un target scelto dall'utente.
+
+E adatto a casi come:
+
+- top brand o top prodotti
+- ranking dinamico per metrica
+- analisi target vs top set
+
+## Requisiti
+
+Per usarlo bene servono:
+
+- una o piu dimensioni candidate a essere ordinate
+- una o piu misure candidate per il ranking
+- almeno una dimensione e una misura scelte durante il binding
+
+## Quando non utilizzarlo
+
+Non e il modulo giusto se:
+
+- la classifica e fissa e non deve essere scelta dall'utente
+- non ti serve una logica target o Top N dinamica
+- vuoi solo una semplice tabella statica senza controlli utente
+
+## Installazione rapida
+
+1. esegui `suggest-bindings` e scegli le dimensioni e le misure da usare per il ranking
+2. salva il profilo di binding ed esegui `validate`
+3. esegui `install`
+4. esegui `test`
+
+Per dettagli tecnici, parametri CLI, asset installati e limiti usare anche `PACKAGE.md`.

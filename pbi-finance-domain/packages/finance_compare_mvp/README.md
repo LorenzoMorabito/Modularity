@@ -1,31 +1,57 @@
 # Finance Compare MVP
 
-Versione corrente: `0.2.2`
+<!-- PBI_PACKAGE_README_STANDARD_V1 -->
 
-Primo package finance importabile del workspace.
+## Cos'e questo modulo
 
-Contents:
-- a semantic adapter layer with wrappers around finance core measures
-- a disconnected selector for `vs BDG` / `vs PY`
-- derived measures for absolute and percentage delta
-- a minimal PBIR page with slicer and KPI visuals
+Questo modulo installa nel modello Power BI un componente riusabile per confrontare una metrica principale con due metriche di riferimento lungo un asse temporale.
 
-Required core contract:
-- `[Fin ACT]`
-- `[Fin BDG]`
-- `[Fin ACT PY]`
-- `[T_DIM_MONTH].[MonthStartDay]`
+Non si limita a creare singole misure di supporto: aggiunge anche una pagina report starter per validare subito il confronto nel consumer.
 
-Packaging strategy:
-- the module uses only `Input ...` wrapper measures
-- the report pack points only to module-owned objects
-- the current MVP mapping is fixed to the existing core model contract
+## Cosa fa
 
-Repository role:
-- this folder is the package source of truth for the finance domain
-- installed copies inside consumer projects are managed artifacts and remain versioned with the consumer repo
+Il modulo permette di leggere una metrica corrente, per esempio `ACT`, e confrontarla con due riferimenti selezionabili, per esempio `BDG` e `PY`.
 
-Current validated consumers:
-- `powerbi-projects/20260317_UAT_001.pbip`
+Calcola la differenza assoluta, la differenza percentuale e la lettura nel tempo sul periodo scelto, cosi da avere un blocco compare pronto da riusare.
 
-Per installazione, parametri di binding, limiti e procedura operativa usare anche `PACKAGE.md`.
+## Cosa fornisce
+
+- la tabella visibile `MOD Finance Compare`
+- tabelle tecniche di supporto per input e selettore confronto
+- una pagina report starter `Metric Compare`
+- una logica pronta per confronti tipo actual vs budget e actual vs previous year
+
+## Quando utilizzarlo
+
+Usalo quando vuoi costruire rapidamente un confronto semplice e leggibile tra una misura principale e due benchmark di riferimento sul tempo.
+
+E adatto a casi come:
+
+- confronto finance `ACT vs BDG vs PY`
+- controllo scostamenti mensili o trimestrali
+- KPI compare con trend temporale minimo gia pronto
+
+## Requisiti
+
+Per usarlo correttamente servono:
+
+- una misura principale
+- due misure di riferimento
+- una colonna temporale ordinata da usare come asse
+
+## Quando non utilizzarlo
+
+Non e il modulo giusto se:
+
+- vuoi confrontare molte metriche diverse nella stessa vista
+- non hai un asse temporale coerente
+- ti serve un report finale gia rifinito per l'utente business
+
+## Installazione rapida
+
+1. esegui `suggest-bindings` e associa misura principale, riferimento 1, riferimento 2 e asse temporale
+2. salva il profilo di binding ed esegui `validate`
+3. esegui `install`
+4. esegui `test`
+
+Per dettagli tecnici, parametri CLI, asset installati e limiti usare anche `PACKAGE.md`.

@@ -40,6 +40,7 @@ $testingModulePaths = @(
     (Join-Path $scriptRoot "Modules/Core/Pbi.TestDiscovery.psm1"),
     (Join-Path $scriptRoot "Modules/Core/Pbi.ArchitectureContract.psm1"),
     (Join-Path $scriptRoot "Modules/Rules/Pbi.ManifestRules.psm1"),
+    (Join-Path $scriptRoot "Modules/Rules/Pbi.DocumentationRules.psm1"),
     (Join-Path $scriptRoot "Modules/Rules/Pbi.ArchitectureRules.psm1"),
     (Join-Path $scriptRoot "Modules/Rules/Pbi.SemanticRules.psm1"),
     (Join-Path $scriptRoot "Modules/Rules/Pbi.ReportRules.psm1"),

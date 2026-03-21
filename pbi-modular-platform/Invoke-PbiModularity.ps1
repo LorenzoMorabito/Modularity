@@ -69,6 +69,27 @@ switch ($Command) {
         }
     }
     "new-module" {
-        & $generatorScript -WorkspaceRoot $WorkspaceRoot -Domain $Domain -ModuleId $ModuleId -DisplayName $DisplayName -Type $Type -Classification $Classification -OutputRoot $OutputRoot -IncludeReportPage:$IncludeReportPage -Force:$Force
+        $generatorParams = @{
+            WorkspaceRoot     = $WorkspaceRoot
+            Domain            = $Domain
+            ModuleId          = $ModuleId
+            Type              = $Type
+            IncludeReportPage = $IncludeReportPage
+            Force             = $Force
+        }
+
+        if ($DisplayName) {
+            $generatorParams.DisplayName = $DisplayName
+        }
+
+        if ($Classification) {
+            $generatorParams.Classification = $Classification
+        }
+
+        if ($OutputRoot) {
+            $generatorParams.OutputRoot = $OutputRoot
+        }
+
+        & $generatorScript @generatorParams
     }
 }

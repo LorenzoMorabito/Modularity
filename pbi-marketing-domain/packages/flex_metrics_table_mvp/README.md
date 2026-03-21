@@ -1,55 +1,57 @@
 # Flex Metrics Table MVP
 
-Versione corrente: `0.4.2`
+<!-- PBI_PACKAGE_README_STANDARD_V1 -->
 
-First marketing-domain table module built as an importable package.
+## Cos'e questo modulo
 
-Contents:
-- wrapper measures around a curated set of core sales, promo, and finance measures
-- a disconnected metric selector with multi-select column behavior
-- a disconnected shared axis table used to switch the row dimension
-- a visual pack with:
-  - multi-select dimension slicer
-  - multi-select metric slicer
-  - pivot-style flexible table visual
+Questo modulo installa nel modello Power BI una tabella pivot riusabile e configurabile, pensata per analisi esplorative dove l'utente deve poter scegliere dimensioni e metriche da mostrare.
 
-Scope of the MVP:
-- multi-select row dimensions with a hierarchical row layout
-- current row dimensions:
-  - `Molecule`
-  - `Country`
-  - `Corporation`
-  - `Product`
-  - `Quarter`
-  - `ATC4`
-- current measure set is intentionally numeric and absolute only
+Aggiunge sia la logica semantica sia una pagina report starter per verificare subito il comportamento del modulo.
 
-Required core contract:
-- measures:
-  - `[Sales Values]`
-  - `[Sales Units]`
-  - `[Counting Units]`
-  - `[Promo Spend]`
-  - `[Promo Details]`
-  - `[Promo Contacts]`
-  - `[Promo Weighted Calls]`
-  - `[Fin ACT]`
-  - `[Fin BDG]`
-  - `[Fin ACT PY]`
-- columns:
-  - `T_DIM_MOLECULE[MoleculeNorm]`
-  - `T_DIM_COUNTRY[Country]`
-  - `T_DIM_CORPORATION[Corporation]`
-  - `T_DIM_PRODUCT[Product]`
-  - `T_DIM_QUARTER[QuarterKey]`
-  - `T_DIM_ACT4[ATC4]`
+## Cosa fa
 
-Notes:
-- this MVP now supports multi-select row dimensions by grouping the table as `Dimension -> Value`
-- the package source lives here; installed copies remain managed artifacts in consumer projects
+Il modulo permette di costruire una tabella flessibile in stile pivot, con selezione delle righe e delle metriche tramite slicer.
 
-Current validated consumers:
-- `powerbi-projects/20260317_Product_Analysis_FlexTable.pbip`
-- `powerbi-projects/20260317_UAT_001.pbip`
+Le dimensioni possono essere cambiate senza rifare il report da zero, e le metriche possono essere combinate nello stesso oggetto per ottenere una vista analitica piu ampia.
 
-Per installazione, parametri di binding, limiti e procedura operativa usare anche `PACKAGE.md`.
+## Cosa fornisce
+
+- la tabella visibile `MOD Flex Pivot`
+- tabelle tecniche per input, selettore metriche e asse righe
+- una pagina report starter `Flexible Metrics Pivot`
+- una struttura pronta per tabelle pivot multi-dimensione e multi-metrica
+
+## Quando utilizzarlo
+
+Usalo quando vuoi dare all'utente una tabella unica da esplorare cambiando dimensioni e KPI senza dover mantenere molte pagine quasi uguali.
+
+E adatto a casi come:
+
+- analisi prodotto, paese, corporation o quarter nella stessa esperienza
+- confronto di vendite, volumi, promo e finance in una vista unica
+- tabelle operative per analisi dettagliata e navigazione libera
+
+## Requisiti
+
+Per usarlo bene servono:
+
+- un consumer con piu dimensioni utili da esporre come righe
+- un set di misure utili da rendere selezionabili
+- almeno una dimensione e una misura scelte durante il binding
+
+## Quando non utilizzarlo
+
+Non e il modulo giusto se:
+
+- vuoi una tabella piatta da export o copia-incolla diretto
+- hai un layout fisso e non vuoi lasciare scelta all'utente
+- ti serve solo un piccolo blocco KPI e non una tabella analitica
+
+## Installazione rapida
+
+1. esegui `suggest-bindings` e scegli il set di dimensioni e misure da esporre
+2. salva il profilo di binding ed esegui `validate`
+3. esegui `install`
+4. esegui `test`
+
+Per dettagli tecnici, parametri CLI, asset installati e limiti usare anche `PACKAGE.md`.

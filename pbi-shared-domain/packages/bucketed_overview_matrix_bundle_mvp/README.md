@@ -1,34 +1,66 @@
 # Bucketed Overview Matrix Bundle MVP
 
-Versione combinata del cluster `bucketed overview` legacy.
+<!-- PBI_PACKAGE_README_STANDARD_V1 -->
 
-## Obiettivo
+## Cos'e questo modulo
 
-Mantenere insieme in un solo package installabile:
+Questo modulo installa nel modello Power BI un bundle completo per costruire una overview competitiva basata su `Target / Top N / Others`, doppia famiglia di KPI e matrix pronta da validare.
 
-- target selector
-- TopN selector
-- target / TopN / Others
-- legend
-- dual-family metric outputs
-- struttura matrice overview
-- report page pronta all'uso
+Oltre alla logica semantica installa anche una pagina report starter, quindi e il pacchetto piu vicino a una soluzione pronta tra i moduli bucketed.
 
-## Oggetti forniti
+## Cosa fa
 
-- `MOD Bucket Overview`
-- `_MOD Bucket Overview Inputs`
-- `_MOD Bucket Overview Targets`
-- `_MOD Bucket Overview N`
-- `_MOD Bucket Overview Slots`
-- `_MOD Bucket Overview Legend`
-- `_MOD Bucket Overview Structure`
-- pagina report `Bucketed Overview Matrix`
+Il modulo combina in un unico package:
 
-## Nota
+- selezione target
+- logica Top N
+- gruppo `Others`
+- legenda
+- doppia famiglia di KPI
+- matrix overview
+- pagina report iniziale
 
-Questo package e la versione "together" del cluster. Le logiche separabili restano comunque disponibili come package piu piccoli:
+Permette quindi di partire subito con una vista competitiva completa, senza dover assemblare piu engine separati.
 
-- `bucket_slot_legend_engine_mvp`
-- `bucket_metric_matrix_engine_mvp`
-- `bucket_metric_family_bundle_mvp`
+## Cosa fornisce
+
+- la tabella visibile `MOD Bucket Overview`
+- tabelle tecniche per input, target, Top N, slots, legenda e structure
+- una pagina report starter `Bucketed Overview Matrix`
+- una soluzione integrata per overview comparative a bucket
+
+## Quando utilizzarlo
+
+Usalo quando vuoi partire velocemente con una vista completa target vs competitor e non vuoi comporre manualmente piu package piccoli.
+
+E adatto a casi come:
+
+- overview competitive gia strutturate
+- benchmark con due famiglie di KPI
+- prototipi rapidi di pagine analysis complete
+
+## Requisiti
+
+Per usarlo correttamente servono:
+
+- una dimensione da analizzare
+- una misura di ranking
+- la famiglia primaria di misure correnti, riferimenti periodo e totali
+- la famiglia secondaria di misure correnti, riferimenti periodo e totali
+
+## Quando non utilizzarlo
+
+Non e il modulo giusto se:
+
+- ti serve solo una parte del comportamento, per esempio solo legend o solo matrix
+- vuoi una UX completamente custom e non una pagina starter
+- non hai gia disponibili le famiglie KPI richieste
+
+## Installazione rapida
+
+1. esegui `suggest-bindings` e associa dimensione, ranking e le due famiglie complete di misure
+2. salva il profilo di binding ed esegui `validate`
+3. esegui `install`
+4. esegui `test`
+
+Per dettagli tecnici, parametri CLI, asset installati e limiti usare anche `PACKAGE.md`.
