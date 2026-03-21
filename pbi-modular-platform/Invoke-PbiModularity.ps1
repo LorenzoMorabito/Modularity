@@ -14,6 +14,8 @@ param(
     [string]$SnapshotId,
     [string]$OutputRoot,
     [string]$AuthoringPath,
+    [ValidateSet("te-folder", "tmdl")]
+    [string]$AuthoringFormat,
     [string]$DisplayName,
     [ValidateSet("report-only", "semantic")]
     [string]$Type = "semantic",
@@ -95,9 +97,32 @@ switch ($Command) {
         & $generatorScript @generatorParams
     }
     "new-authoring-model" {
-        & $authoringScript -Command new-authoring-model -WorkspaceRoot $WorkspaceRoot -Domain $Domain -ModuleId $ModuleId -AuthoringPath $AuthoringPath -Force:$Force
+        $authoringParams = @{
+            Command       = "new-authoring-model"
+            WorkspaceRoot = $WorkspaceRoot
+            Domain        = $Domain
+            ModuleId      = $ModuleId
+            AuthoringPath = $AuthoringPath
+            Force         = $Force
+        }
+        if ($AuthoringFormat) {
+            $authoringParams.AuthoringFormat = $AuthoringFormat
+        }
+
+        & $authoringScript @authoringParams
     }
     "sync-pack-from-authoring" {
-        & $authoringScript -Command sync-pack-from-authoring -WorkspaceRoot $WorkspaceRoot -Domain $Domain -ModuleId $ModuleId -AuthoringPath $AuthoringPath
+        $authoringParams = @{
+            Command       = "sync-pack-from-authoring"
+            WorkspaceRoot = $WorkspaceRoot
+            Domain        = $Domain
+            ModuleId      = $ModuleId
+            AuthoringPath = $AuthoringPath
+        }
+        if ($AuthoringFormat) {
+            $authoringParams.AuthoringFormat = $AuthoringFormat
+        }
+
+        & $authoringScript @authoringParams
     }
 }

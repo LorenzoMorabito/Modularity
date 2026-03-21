@@ -75,6 +75,12 @@ Design evolutivi documentati:
 - [docs/package-documentation-standard.md](./docs/package-documentation-standard.md)
 - [docs/authoring-workflow.md](./docs/authoring-workflow.md)
 
+Workflow authoring attuale:
+
+- `new-authoring-model` genera di default un sandbox `te-folder` apribile in Tabular Editor
+- `-AuthoringFormat tmdl` mantiene disponibile il sandbox `.SemanticModel`
+- `sync-pack-from-authoring` auto-rileva il formato dal metadata del sandbox
+
 ## Posizionamento nella repo
 
 Questa cartella vive sotto `modularity/` e rappresenta la platform condivisa del workspace corrente.
