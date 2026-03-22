@@ -42,6 +42,15 @@ pwsh .\pbi-modular-platform\Invoke-PbiModularity.ps1 `
   -OutputRoot <OUTPUT_ROOT>
 ```
 
+Harness di test:
+
+```powershell
+pwsh .\pbi-modular-platform\Invoke-PbiModularity.ps1 `
+  -Command test-promotion `
+  -WorkspaceRoot <WORKSPACE_ROOT> `
+  -ProjectPath <PROJECT_PATH>
+```
+
 ## Perimetro V1
 
 Supportato:
@@ -72,6 +81,34 @@ File prodotti:
 - `baseline.json`
 - `promotion-report.json`
 - `promotion-report.md`
+
+## Test automation V1
+
+Il promotore dispone di un harness scenario-based in:
+
+`pbi-modular-platform/promotion/testing/Invoke-PbiSemanticPromotionTests.ps1`
+
+Fixture versionate:
+
+- `promotion/testing/fixtures/golden/simple`
+- `promotion/testing/fixtures/golden/multi`
+- `promotion/testing/fixtures/failure/strict-outside-inputs`
+- `promotion/testing/fixtures/targets`
+
+Copertura attuale del harness:
+
+- parse TMDL di fixture semplici
+- classificazione external references
+- generazione binding candidates
+- generazione manifest
+- delta classification su workbench reale
+- golden path semplice
+- golden path multi-table
+- failure path target-owned table changed
+- failure path relationships changed
+- failure path strict reference outside `_MOD ... Inputs`
+- idempotenza output package
+- round-trip promotion -> catalog registration -> validate -> install -> test
 
 ## Limiti noti V1
 

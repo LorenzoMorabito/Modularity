@@ -1,0 +1,23 @@
+table 'MOD Promo Multi'
+
+	measure 'Promo Multi Current Value' = '_MOD Promo Multi Inputs'[Promo Multi Input Sales]
+		formatString: #,0
+		displayFolder: Outputs
+
+	measure 'Promo Multi Selected Entity' = '_MOD Promo Multi Inputs'[Promo Multi Input Entity]
+		displayFolder: Outputs
+
+	measure 'Promo Multi Slot Count' = COUNTROWS('_MOD Promo Multi Slots')
+		formatString: 0
+		displayFolder: Outputs
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Promo Multi' = calculated
+		mode: import
+		source = Row("Column", BLANK())

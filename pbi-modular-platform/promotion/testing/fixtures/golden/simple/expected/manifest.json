@@ -1,0 +1,63 @@
+{
+  "moduleId": "promo_fixture_simple",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "prototype",
+  "description": "Promoted semantic module 'promo_fixture_simple' from a Power BI Desktop workbench.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_SALES_LE"
+    ],
+    "coreColumns": [
+      "MOD_BIND_CORPORATION_CORPORATION[Value]"
+    ]
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Promo Test Inputs",
+      "MOD Promo Test"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Promo Test",
+    "hiddenTables": [
+      "_MOD Promo Test Inputs"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "column_corporation_corporation",
+        "bindingKey": "MOD_BIND_CORPORATION_CORPORATION[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Corporation",
+        "description": "Bind target column for Promo Test Input Entity.",
+        "defaultValue": "Corporation[Corporation]",
+        "suggestions": [
+          "Corporation[Corporation]"
+        ]
+      },
+      {
+        "id": "sales_le",
+        "bindingKey": "MOD_BIND_SALES_LE",
+        "kind": "measure",
+        "required": true,
+        "label": "Sales LE",
+        "description": "Bind target measure for Promo Test Input Sales.",
+        "defaultValue": "Sales LE",
+        "suggestions": [
+          "Sales LE"
+        ]
+      }
+    ]
+  }
+}

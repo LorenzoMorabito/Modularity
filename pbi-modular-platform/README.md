@@ -51,6 +51,7 @@ Capabilita implementate:
 - `sync-pack-from-authoring`
 - `new-promotion-baseline`
 - `promote-semantic-module`
+- `test-promotion`
 
 Governance implementata:
 
@@ -88,6 +89,7 @@ Workflow promotion V1:
 
 - `new-promotion-baseline` congela il baseline del workbench Desktop-first in modalita `byPath-local-workbench`
 - `promote-semantic-module` estrae solo nuove tabelle module-owned, blocca modifiche fuori perimetro, genera un package semantic-only installabile e aggiorna il catalogo del dominio quando l'output ricade nel workspace governato
+- `test-promotion` esegue unit test e integration test versionati del promotore semantic, inclusi golden path, failure path, idempotenza e round-trip installativo
 
 ## Posizionamento nella repo
 

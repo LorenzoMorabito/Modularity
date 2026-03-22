@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("list", "install", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles", "new-authoring-model", "sync-pack-from-authoring", "new-promotion-baseline", "promote-semantic-module")]
+    [ValidateSet("list", "install", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles", "new-authoring-model", "sync-pack-from-authoring", "new-promotion-baseline", "promote-semantic-module", "test-promotion")]
     [string]$Command,
 
     [string]$WorkspaceRoot,
@@ -37,6 +37,7 @@ $qualityScript = Join-Path $platformRoot "testing/Invoke-PbiQualityChecks.ps1"
 $generatorScript = Join-Path $platformRoot "scaffolding/New-PbiModuleTemplate.ps1"
 $authoringScript = Join-Path $platformRoot "authoring/Invoke-PbiModuleAuthoring.ps1"
 $promotionScript = Join-Path $platformRoot "promotion/Invoke-PbiSemanticPromotion.ps1"
+$promotionTestScript = Join-Path $platformRoot "promotion/testing/Invoke-PbiSemanticPromotionTests.ps1"
 
 switch ($Command) {
     "list" {
@@ -146,5 +147,20 @@ switch ($Command) {
         }
 
         & $promotionScript @promotionParams
+    }
+    "test-promotion" {
+        $testParams = @{
+            WorkspaceRoot = $WorkspaceRoot
+        }
+
+        if ($ProjectPath) {
+            $testParams.ProjectPath = $ProjectPath
+        }
+
+        if ($OutputRoot) {
+            $testParams.OutputRoot = $OutputRoot
+        }
+
+        & $promotionTestScript @testParams
     }
 }

@@ -1,0 +1,17 @@
+table '_MOD Promo Multi Inputs'
+	isHidden
+
+	measure 'Promo Multi Input Sales' = [Sales LE]
+
+	measure 'Promo Multi Input Entity' = SELECTEDVALUE(Corporation[Corporation])
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition '_MOD Promo Multi Inputs' = calculated
+		mode: import
+		source = Row("Column", BLANK())

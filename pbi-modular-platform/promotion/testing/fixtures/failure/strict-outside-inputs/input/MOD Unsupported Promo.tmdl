@@ -1,0 +1,15 @@
+table 'MOD Unsupported Promo'
+
+	measure 'Unsupported Current Value' = [Sales LE]
+		displayFolder: Outputs
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Unsupported Promo' = calculated
+		mode: import
+		source = Row("Column", BLANK())

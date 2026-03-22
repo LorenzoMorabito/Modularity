@@ -1,0 +1,17 @@
+table '_MOD Promo Multi Slots'
+	isHidden
+
+	column Slot
+		dataType: string
+		sourceColumn: [Slot]
+
+	partition '_MOD Promo Multi Slots' = calculated
+		mode: import
+		source =
+			DATATABLE(
+				"Slot", STRING,
+				{
+					{ "A" },
+					{ "B" }
+				}
+			)

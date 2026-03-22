@@ -1,0 +1,5 @@
+table Corporation
+
+	column Corporation
+		dataType: string
+		sourceColumn: Corporation
