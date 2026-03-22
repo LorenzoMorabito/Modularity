@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("list", "install", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles", "new-authoring-model", "sync-pack-from-authoring")]
+    [ValidateSet("list", "install", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles", "new-authoring-model", "sync-pack-from-authoring", "new-promotion-baseline", "promote-semantic-module")]
     [string]$Command,
 
     [string]$WorkspaceRoot,
@@ -17,6 +17,7 @@ param(
     [ValidateSet("te-folder", "tmdl")]
     [string]$AuthoringFormat,
     [string]$DisplayName,
+    [string]$Version = "0.1.0",
     [ValidateSet("report-only", "semantic")]
     [string]$Type = "semantic",
     [ValidateSet("report-only", "semantic-light", "semantic-heavy")]
@@ -35,6 +36,7 @@ $installerScript = Join-Path $platformRoot "installer/Invoke-PbiModuleInstaller.
 $qualityScript = Join-Path $platformRoot "testing/Invoke-PbiQualityChecks.ps1"
 $generatorScript = Join-Path $platformRoot "scaffolding/New-PbiModuleTemplate.ps1"
 $authoringScript = Join-Path $platformRoot "authoring/Invoke-PbiModuleAuthoring.ps1"
+$promotionScript = Join-Path $platformRoot "promotion/Invoke-PbiSemanticPromotion.ps1"
 
 switch ($Command) {
     "list" {
@@ -124,5 +126,25 @@ switch ($Command) {
         }
 
         & $authoringScript @authoringParams
+    }
+    "new-promotion-baseline" {
+        & $promotionScript -Command "new-promotion-baseline" -WorkspaceRoot $WorkspaceRoot -ProjectPath $ProjectPath -ModuleId $ModuleId
+    }
+    "promote-semantic-module" {
+        $promotionParams = @{
+            Command       = "promote-semantic-module"
+            WorkspaceRoot = $WorkspaceRoot
+            ProjectPath   = $ProjectPath
+            Domain        = $Domain
+            ModuleId      = $ModuleId
+            Version       = $Version
+            Force         = $Force
+        }
+
+        if ($OutputRoot) {
+            $promotionParams.OutputRoot = $OutputRoot
+        }
+
+        & $promotionScript @promotionParams
     }
 }

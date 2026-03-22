@@ -49,6 +49,8 @@ Capabilita implementate:
 - `new-module`
 - `new-authoring-model`
 - `sync-pack-from-authoring`
+- `new-promotion-baseline`
+- `promote-semantic-module`
 
 Governance implementata:
 
@@ -74,12 +76,18 @@ Design evolutivi documentati:
 - [docs/package-semantic-standard.md](./docs/package-semantic-standard.md)
 - [docs/package-documentation-standard.md](./docs/package-documentation-standard.md)
 - [docs/authoring-workflow.md](./docs/authoring-workflow.md)
+- [docs/semantic-promotion-v1.md](./docs/semantic-promotion-v1.md)
 
 Workflow authoring attuale:
 
 - `new-authoring-model` genera di default un sandbox `te-folder` apribile in Tabular Editor
 - `-AuthoringFormat tmdl` mantiene disponibile il sandbox `.SemanticModel`
 - `sync-pack-from-authoring` auto-rileva il formato dal metadata del sandbox
+
+Workflow promotion V1:
+
+- `new-promotion-baseline` congela il baseline del workbench Desktop-first in modalita `byPath-local-workbench`
+- `promote-semantic-module` estrae solo nuove tabelle module-owned, blocca modifiche fuori perimetro, genera un package semantic-only installabile e aggiorna il catalogo del dominio quando l'output ricade nel workspace governato
 
 ## Posizionamento nella repo
 
