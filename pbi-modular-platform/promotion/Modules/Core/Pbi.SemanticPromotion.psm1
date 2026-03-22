@@ -27,6 +27,57 @@ function ConvertTo-PbiSemanticPromotionManifestObject {
     return ($Manifest | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100)
 }
 
+function Get-PbiSemanticPromotionReferenceReasonLabel {
+    param([string]$SupportReason)
+
+    switch ($SupportReason) {
+        "qualified-column-reference" { return "riferimento qualificato a colonna" }
+        "qualified-measure-reference" { return "riferimento qualificato a misura" }
+        "unqualified-measure-reference" { return "riferimento semplice a misura" }
+        "ambiguous-unqualified-measure-reference" { return "riferimento ambiguo a misura con piu owner possibili" }
+        "table-reference" { return "riferimento tabellare esterno" }
+        "target-object-not-found" { return "oggetto target non trovato" }
+        "unresolved-unqualified-reference" { return "riferimento non qualificato non risolto" }
+        "unresolved-table-reference" { return "tabella esterna non risolta" }
+        default { return "pattern non classificato" }
+    }
+}
+
+function Get-PbiSemanticPromotionSupportMatrix {
+    return @(
+        [PSCustomObject]@{
+            status  = "supported"
+            pattern = "Simple external measure pass-through"
+            example = "[Sales LE]"
+            notes   = "Solo nel layer _MOD ... Inputs e solo se il nome misura e univoco nel target."
+        }
+        [PSCustomObject]@{
+            status  = "supported"
+            pattern = "Simple external column selector"
+            example = "SELECTEDVALUE(Corporation[Corporation])"
+            notes   = "Supportati anche VALUES e DISTINCT nel layer _MOD ... Inputs."
+        }
+        [PSCustomObject]@{
+            status  = "blocked"
+            pattern = "Qualified external measure reference"
+            example = "Sales[Sales LE]"
+            notes   = "Nel V1 strict il promotore non genera placeholder automatici per questo pattern."
+        }
+        [PSCustomObject]@{
+            status  = "blocked"
+            pattern = "External table reference"
+            example = "ALL(Sales)"
+            notes   = "I riferimenti tabellari esterni non vengono placeholderizzati automaticamente nel V1."
+        }
+        [PSCustomObject]@{
+            status  = "blocked"
+            pattern = "Ambiguous unqualified measure reference"
+            example = "[Sales LE]"
+            notes   = "Se il target contiene piu misure con lo stesso nome, la promotion fallisce."
+        }
+    )
+}
+
 function New-PbiSemanticPromotionBaseline {
     param(
         [string]$WorkspaceRoot,
@@ -171,8 +222,13 @@ function Test-PbiSemanticPromotionStrictReferences {
 
     $errors = New-Object System.Collections.Generic.List[string]
     foreach ($reference in @($ExternalReferences)) {
+        $reasonLabel = Get-PbiSemanticPromotionReferenceReasonLabel -SupportReason $reference.supportReason
         if ($reference.supportStatus -eq "unsupported") {
-            $errors.Add(("Il riferimento esterno {0} in {1} non e supportato automaticamente nel V1." -f $reference.referenceText, $reference.location))
+            $errors.Add(("Il riferimento esterno {0} in {1} non e supportato automaticamente nel V1 ({2})." -f $reference.referenceText, $reference.location, $reasonLabel))
+        }
+
+        if ($reference.supportStatus -eq "manual-review") {
+            $errors.Add(("Il riferimento esterno {0} in {1} richiede review manuale e non e deterministico nel V1 strict ({2})." -f $reference.referenceText, $reference.location, $reasonLabel))
         }
 
         if (
@@ -181,6 +237,52 @@ function Test-PbiSemanticPromotionStrictReferences {
         ) {
             $errors.Add(("Il riferimento esterno {0} e stato trovato fuori dal layer Inputs consentito in {1}." -f $reference.referenceText, $reference.location))
         }
+    }
+
+    return @($errors | Sort-Object -Unique)
+}
+
+function Test-PbiSemanticPromotionBindingCoverage {
+    param(
+        [Parameter(Mandatory = $true)][object[]]$ExternalReferences,
+        [AllowEmptyCollection()][object[]]$BindingCandidates = @()
+    )
+
+    $candidateObjects = New-Object System.Collections.Generic.List[object]
+    foreach ($candidate in @($BindingCandidates)) {
+        if ($null -eq $candidate) {
+            continue
+        }
+
+        if ($candidate -is [System.Array]) {
+            foreach ($innerCandidate in @($candidate)) {
+                if ($null -ne $innerCandidate) {
+                    $candidateObjects.Add($innerCandidate)
+                }
+            }
+
+            continue
+        }
+
+        $candidateObjects.Add($candidate)
+    }
+
+    $coveredOriginalTexts = @(
+        $candidateObjects |
+            Where-Object { $_.PSObject.Properties["originalText"] } |
+            ForEach-Object { [string]$_.originalText } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+            Sort-Object -Unique
+    )
+    $errors = New-Object System.Collections.Generic.List[string]
+
+    foreach ($reference in @($ExternalReferences | Where-Object { $_.supportStatus -eq "supported" })) {
+        if ($coveredOriginalTexts -contains $reference.referenceText) {
+            continue
+        }
+
+        $reasonLabel = Get-PbiSemanticPromotionReferenceReasonLabel -SupportReason $reference.supportReason
+        $errors.Add(("Il riferimento esterno {0} in {1} e stato rilevato ma non rientra nei pattern placeholderizzabili automaticamente del V1 strict ({2})." -f $reference.referenceText, $reference.location, $reasonLabel))
     }
 
     return @($errors | Sort-Object -Unique)
@@ -386,6 +488,7 @@ function Get-PbiGeneratedPackageSheetContent {
     $lines.Add("## Caratteristiche")
     $lines.Add("- Promotion V1 semantic-only.")
     $lines.Add("- Fail-fast su tabelle target, relazioni e metadata globali fuori perimetro.")
+    $lines.Add("- Pattern binding supportati automaticamente: `[Measure]` semplice univoca e selector `SELECTEDVALUE/VALUES/DISTINCT(Table[Column])` nel layer `_MOD ... Inputs`.")
     $lines.Add("")
     $lines.Add("## Cosa installa")
     foreach ($tableLine in $tableLines) {
@@ -506,22 +609,28 @@ function Invoke-PbiSemanticModulePromotion {
     $targetInventory = Invoke-PbiSemanticPromotionStage -StageName "target-inventory" -Action {
         Get-PbiSemanticPromotionTargetInventory -Project $project -Baseline $baseline
     }
-    $definitions = Invoke-PbiSemanticPromotionStage -StageName "definition-parse" -Action {
+    $definitions = @(Invoke-PbiSemanticPromotionStage -StageName "definition-parse" -Action {
         Get-PbiSemanticPromotionDefinitions -Project $project -TableNames @($delta.newTables)
-    }
-    $externalReferences = Invoke-PbiSemanticPromotionStage -StageName "external-reference-scan" -Action {
+    })
+    $externalReferences = @(Invoke-PbiSemanticPromotionStage -StageName "external-reference-scan" -Action {
         Get-PbiTmdlExternalReferences -Definitions $definitions -ModuleInventory $moduleInventory -TargetInventory $targetInventory
-    }
+    })
     $strictErrors = @(Test-PbiSemanticPromotionStrictReferences -ExternalReferences $externalReferences)
     if ($strictErrors.Count -gt 0) {
         throw (($strictErrors -join " "))
     }
 
-    $bindingCandidates = Invoke-PbiSemanticPromotionStage -StageName "binding-discovery" -Action {
+    $bindingCandidates = @(Invoke-PbiSemanticPromotionStage -StageName "binding-discovery" -Action {
         @(Get-PbiSimpleBindingCandidates -Definitions $definitions -TargetInventory $targetInventory)
-    }
-    $bindingSummary = Invoke-PbiSemanticPromotionStage -StageName "binding-summary" -Action {
+    })
+    $bindingSummary = @(Invoke-PbiSemanticPromotionStage -StageName "binding-summary" -Action {
         @(Get-PbiBindingSummary -BindingCandidates $bindingCandidates)
+    })
+    $bindingCoverageErrors = @(Invoke-PbiSemanticPromotionStage -StageName "binding-coverage" -Action {
+        @(Test-PbiSemanticPromotionBindingCoverage -ExternalReferences $externalReferences -BindingCandidates $bindingCandidates)
+    })
+    if ($bindingCoverageErrors.Count -gt 0) {
+        throw (($bindingCoverageErrors -join " "))
     }
     $manifest = Invoke-PbiSemanticPromotionStage -StageName "manifest-generation" -Action {
         $rawManifest = Get-PbiGeneratedManifest -ModuleId $ModuleId -Version $Version -Domain $Domain -TableNames @($delta.newTables) -BindingSummary $bindingSummary
@@ -552,6 +661,7 @@ function Invoke-PbiSemanticModulePromotion {
         }
         externalReferences = @($externalReferences)
         generatedBindings  = @($bindingSummary)
+        supportMatrix      = @(Get-PbiSemanticPromotionSupportMatrix)
     }
     $reportPaths = Invoke-PbiSemanticPromotionStage -StageName "report-write" -Action {
         Write-PbiSemanticPromotionReportFiles -Project $project -ModuleId $ModuleId -ReportObject $reportObject

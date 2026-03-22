@@ -1,0 +1,7 @@
+table 'Sales Duplicate'
+
+	measure 'Sales LE' = SUM('Sales Duplicate'[Amount])
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount

@@ -356,13 +356,20 @@ function Write-PbiSemanticPromotionReportFiles {
     $lines.Add("## External References")
     $lines.Add("")
     foreach ($reference in @($ReportObject.externalReferences)) {
-        $lines.Add(('- `{0}` | `{1}` | `{2}` | `{3}`' -f $reference.supportStatus, $reference.referenceType, $reference.referenceText, $reference.location))
+        $reason = if ($reference.supportReason) { $reference.supportReason } else { "n/a" }
+        $lines.Add(('- `{0}` | `{1}` | `{2}` | `{3}` | `{4}`' -f $reference.supportStatus, $reference.referenceType, $reference.referenceText, $reference.location, $reason))
     }
     $lines.Add("")
     $lines.Add("## Generated Bindings")
     $lines.Add("")
     foreach ($binding in @($ReportObject.generatedBindings)) {
         $lines.Add(('- `{0}` -> `{1}`' -f $binding.bindingKey, $binding.targetReference))
+    }
+    $lines.Add("")
+    $lines.Add("## Support Matrix V1")
+    $lines.Add("")
+    foreach ($entry in @($ReportObject.supportMatrix)) {
+        $lines.Add(('- `{0}` | `{1}` | `{2}` | `{3}`' -f $entry.status, $entry.pattern, $entry.example, $entry.notes))
     }
 
     Write-PbiUtf8File -Path $markdownPath -Content ($lines -join [Environment]::NewLine)

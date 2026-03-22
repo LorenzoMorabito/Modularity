@@ -247,10 +247,16 @@ function Get-PbiFailureFixtureInputDirectory {
 }
 
 function Get-PbiTargetFixtureInventory {
+    param([switch]$IncludeAmbiguousSalesMeasure)
+
     $targetPaths = @(
         (Join-Path $fixtureRoot "targets\Corporation.tmdl"),
         (Join-Path $fixtureRoot "targets\Sales.tmdl")
     )
+
+    if ($IncludeAmbiguousSalesMeasure) {
+        $targetPaths += (Join-Path $fixtureRoot "targets\Sales Duplicate.tmdl")
+    }
 
     return (Get-PbiTmdlInventoryMap -TablePaths $targetPaths)
 }
@@ -362,6 +368,33 @@ function Invoke-PbiPromotionUnitTests {
         Assert-PbiCondition -Condition (@($externalReferences | Where-Object { $_.referenceType -eq "column" -and $_.referenceText -eq "Corporation[Corporation]" }).Count -eq 1) -Message "Expected one supported external column reference."
     }
 
+    $results += Invoke-PbiPromotionTestCase -Name "unit.external-reference-ambiguous-measure" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $inputPaths = @(
+            (Join-Path (Get-PbiFixtureInputDirectory -ScenarioName "simple") "_MOD Promo Test Inputs.tmdl"),
+            (Join-Path (Get-PbiFixtureInputDirectory -ScenarioName "simple") "MOD Promo Test.tmdl")
+        )
+        $moduleInventory = Get-PbiTmdlInventoryMap -TablePaths $inputPaths
+        $targetInventory = Get-PbiTargetFixtureInventory -IncludeAmbiguousSalesMeasure
+        $definitions = @()
+        foreach ($path in $inputPaths) {
+            $definitions += @(Get-PbiTmdlObjectDefinitions -Path $path)
+        }
+
+        $externalReferences = @(Get-PbiTmdlExternalReferences -Definitions $definitions -ModuleInventory $moduleInventory -TargetInventory $targetInventory)
+        $ambiguousMeasureRef = @($externalReferences | Where-Object { $_.referenceText -eq "[Sales LE]" } | Select-Object -First 1)
+        Assert-PbiCondition -Condition ($null -ne $ambiguousMeasureRef) -Message "Expected the ambiguous measure reference to be detected."
+        Assert-PbiEqual -Actual $ambiguousMeasureRef.supportStatus -Expected "manual-review" -Message "Expected the ambiguous measure reference to require manual review."
+        Assert-PbiEqual -Actual $ambiguousMeasureRef.supportReason -Expected "ambiguous-unqualified-measure-reference" -Message "Expected the ambiguous measure reference reason code."
+
+        $strictErrors = @(Invoke-PbiPromotionInternal -ScriptBlock {
+            param([object[]]$References)
+            Test-PbiSemanticPromotionStrictReferences -ExternalReferences $References
+        } -ArgumentList @(,$externalReferences))
+        Assert-PbiCondition -Condition (@($strictErrors | Where-Object { $_ -like "*review manuale*" }).Count -eq 1) -Message "Expected strict mode to block ambiguous measure references."
+    }
+
     $results += Invoke-PbiPromotionTestCase -Name "unit.binding-candidate-generation" -ArtifactRoot $ArtifactRoot -Action {
         param($caseRoot)
 
@@ -372,6 +405,36 @@ function Invoke-PbiPromotionUnitTests {
         Assert-PbiEqual -Actual $bindingCandidates.Count -Expected 2 -Message "Expected two binding candidates in the simple fixture."
         Assert-PbiCondition -Condition (@($bindingCandidates | Where-Object { $_.kind -eq "measure" -and $_.bindingKey -eq "MOD_BIND_SALES_LE" }).Count -eq 1) -Message "Expected one measure binding candidate."
         Assert-PbiCondition -Condition (@($bindingCandidates | Where-Object { $_.kind -eq "column" -and $_.bindingKey -eq "MOD_BIND_CORPORATION_CORPORATION[Value]" }).Count -eq 1) -Message "Expected one column binding candidate."
+    }
+
+    $results += Invoke-PbiPromotionTestCase -Name "unit.binding-candidate-generation-ambiguous-measure" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $definitions = @(
+            Get-PbiTmdlObjectDefinitions -Path (Join-Path (Get-PbiFixtureInputDirectory -ScenarioName "simple") "_MOD Promo Test Inputs.tmdl")
+        )
+        $bindingCandidates = @(Get-PbiSimpleBindingCandidates -Definitions $definitions -TargetInventory (Get-PbiTargetFixtureInventory -IncludeAmbiguousSalesMeasure))
+        Assert-PbiEqual -Actual $bindingCandidates.Count -Expected 1 -Message "Expected only the column binding candidate when the measure name is ambiguous."
+        Assert-PbiCondition -Condition (@($bindingCandidates | Where-Object { $_.kind -eq "measure" }).Count -eq 0) -Message "Did not expect a measure binding candidate for an ambiguous measure name."
+    }
+
+    $results += Invoke-PbiPromotionTestCase -Name "unit.binding-coverage-qualified-measure-failure" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $inputPath = Join-Path (Get-PbiFailureFixtureInputDirectory -ScenarioName "qualified-measure-in-inputs") "_MOD Promo Qualified Inputs.tmdl"
+        $moduleInventory = Get-PbiTmdlInventoryMap -TablePaths @($inputPath)
+        $definitions = @(Get-PbiTmdlObjectDefinitions -Path $inputPath)
+        $targetInventory = Get-PbiTargetFixtureInventory
+        $externalReferences = @(Get-PbiTmdlExternalReferences -Definitions $definitions -ModuleInventory $moduleInventory -TargetInventory $targetInventory)
+        $bindingCandidates = @(Get-PbiSimpleBindingCandidates -Definitions $definitions -TargetInventory $targetInventory)
+
+        Assert-PbiEqual -Actual $bindingCandidates.Count -Expected 0 -Message "Did not expect automatic binding candidates for a qualified measure reference."
+
+        $coverageErrors = @(Invoke-PbiPromotionInternal -ScriptBlock {
+            param([object[]]$References, [object[]]$Candidates)
+            Test-PbiSemanticPromotionBindingCoverage -ExternalReferences $References -BindingCandidates $Candidates
+        } -ArgumentList @(,$externalReferences),@(,$bindingCandidates))
+        Assert-PbiCondition -Condition (@($coverageErrors | Where-Object { $_ -like "*placeholderizzabili automaticamente*" }).Count -eq 1) -Message "Expected a binding coverage failure for the qualified measure reference."
     }
 
     $results += Invoke-PbiPromotionTestCase -Name "unit.manifest-generation" -ArtifactRoot $ArtifactRoot -Action {
@@ -468,6 +531,7 @@ function Invoke-PbiPromotionIntegrationTests {
         $report = Read-PbiJsonFile -Path $reportPath
         Assert-PbiEqual -Actual (@($report.externalReferences).Count) -Expected 2 -Message "Expected two external references in the promotion report."
         Assert-PbiEqual -Actual (@($report.generatedBindings).Count) -Expected 2 -Message "Expected two generated bindings in the promotion report."
+        Assert-PbiCondition -Condition (@($report.supportMatrix).Count -ge 4) -Message "Expected the promotion report to include the V1 support matrix."
         Assert-PbiContains -ActualText $promotionResult.OutputText -ExpectedFragment "External bindings: 2" -Message "The promotion CLI output should report the generated binding count."
     }
 
@@ -574,6 +638,31 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "promote.log") -ExpectFailure
 
         Assert-PbiContains -ActualText $failure.OutputText -ExpectedFragment "fuori dal layer Inputs consentito" -Message "Expected strict-mode failure for an external reference outside the Inputs layer."
+    }
+
+    $results += Invoke-PbiPromotionTestCase -Name "integration.failure-qualified-measure-in-inputs" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        $moduleId = "promo_failure_qualified_measure"
+
+        $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "new-promotion-baseline" -Parameters ([ordered]@{
+            WorkspaceRoot = $resolvedWorkspaceRoot
+            ProjectPath   = $project.PbipPath
+            ModuleId      = $moduleId
+        }) -LogPath (Join-Path $caseRoot "baseline.log")
+
+        Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFailureFixtureInputDirectory -ScenarioName "qualified-measure-in-inputs") -Project $project
+        $failure = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
+            WorkspaceRoot = $resolvedWorkspaceRoot
+            ProjectPath   = $project.PbipPath
+            Domain        = "shared"
+            ModuleId      = $moduleId
+            OutputRoot    = (Join-Path $caseRoot "output")
+            Force         = $true
+        }) -LogPath (Join-Path $caseRoot "promote.log") -ExpectFailure
+
+        Assert-PbiContains -ActualText $failure.OutputText -ExpectedFragment "placeholderizzabili automaticamente" -Message "Expected strict-mode failure for a qualified measure reference inside Inputs."
     }
 
     $results += Invoke-PbiPromotionTestCase -Name "integration.idempotence" -ArtifactRoot $ArtifactRoot -Action {

@@ -57,8 +57,8 @@ Supportato:
 
 - package `semantic-only`
 - nuovi file `definition/tables/*.tmdl`
-- riferimenti esterni semplici a misure
-- riferimenti esterni semplici a colonne tramite selector nel layer inputs
+- riferimenti esterni semplici a misure solo in forma `[Measure]` nel layer inputs e solo se il nome misura e univoco nel target
+- riferimenti esterni semplici a colonne tramite `SELECTEDVALUE`, `VALUES`, `DISTINCT` nel layer inputs
 - generazione automatica di `manifest.json`, `README.md`, `PACKAGE.md` e `semantic/*.tmdl`
 - registrazione automatica nel `catalog/modules.json` del dominio quando l'output viene scritto dentro una repo-domain del workspace
 
@@ -69,6 +69,33 @@ Bloccato automaticamente:
 - modifica di `model.tmdl`, `database.tmdl`, `expressions.tmdl`
 - modifica di `cultures/*`
 - riferimenti esterni fuori dal layer `_MOD ... Inputs`
+- riferimenti a misura qualificati tipo `Sales[Sales LE]`
+- riferimenti tabellari esterni tipo `ALL(Sales)`
+- riferimenti a misura non qualificati ma ambigui nel target
+
+## Support Matrix V1
+
+Pattern supportati automaticamente:
+
+- `[Sales LE]`
+  semplice pass-through di misura esterna nel layer `_MOD ... Inputs`
+- `SELECTEDVALUE(Corporation[Corporation])`
+  selector semplice di colonna esterna nel layer `_MOD ... Inputs`
+- `VALUES(Corporation[Corporation])`
+  variante supportata del selector semplice
+- `DISTINCT(Corporation[Corporation])`
+  variante supportata del selector semplice
+
+Pattern rifiutati deliberatamente:
+
+- `Sales[Sales LE]`
+  riferimento qualificato a misura: il promotore lo riconosce ma non lo placeholderizza automaticamente nel V1 strict
+- `ALL(Sales)`
+  riferimento tabellare esterno: classificato ma non esportabile automaticamente nel V1
+- `[Sales LE]` quando il target contiene piu misure omonime
+  caso ambiguo, quindi promotion fermata con errore leggibile
+- espressioni miste o complesse che combinano piu ref esterni fuori dai pattern sopra
+  il parser le vede, ma la promotion fallisce se non c'e copertura di binding deterministica
 
 ## File di sessione
 
@@ -99,7 +126,9 @@ Copertura attuale del harness:
 
 - parse TMDL di fixture semplici
 - classificazione external references
+- blocco dei riferimenti ambigui in strict mode
 - generazione binding candidates
+- blocco dei riferimenti riconosciuti ma non placeholderizzabili
 - generazione manifest
 - delta classification su workbench reale
 - golden path semplice
@@ -107,6 +136,7 @@ Copertura attuale del harness:
 - failure path target-owned table changed
 - failure path relationships changed
 - failure path strict reference outside `_MOD ... Inputs`
+- failure path qualified measure reference inside `_MOD ... Inputs`
 - idempotenza output package
 - round-trip promotion -> catalog registration -> validate -> install -> test
 

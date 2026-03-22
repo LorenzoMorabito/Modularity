@@ -266,7 +266,8 @@ function New-PbiExternalReference {
         [Parameter(Mandatory = $true)][string]$ObjectType,
         [Parameter(Mandatory = $true)][string]$ReferenceType,
         [Parameter(Mandatory = $true)][string]$ReferenceText,
-        [Parameter(Mandatory = $true)][string]$SupportStatus
+        [Parameter(Mandatory = $true)][string]$SupportStatus,
+        [string]$SupportReason = ""
     )
 
     return [PSCustomObject]@{
@@ -276,6 +277,7 @@ function New-PbiExternalReference {
         referenceType = $ReferenceType
         referenceText = $ReferenceText
         supportStatus = $SupportStatus
+        supportReason = $SupportReason
         location      = ($TableName + "::" + $ObjectName)
     }
 }
@@ -319,17 +321,17 @@ function Get-PbiTmdlExternalReferences {
             if ($TargetInventory.Tables.Contains($tableName)) {
                 $tableInfo = $TargetInventory.Tables[$tableName]
                 if (@($tableInfo.Columns) -contains $objectName) {
-                    $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "column" -ReferenceText ($tableName + "[" + $objectName + "]") -SupportStatus "supported"))
+                    $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "column" -ReferenceText ($tableName + "[" + $objectName + "]") -SupportStatus "supported" -SupportReason "qualified-column-reference"))
                     continue
                 }
 
                 if (@($tableInfo.Measures) -contains $objectName) {
-                    $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "measure" -ReferenceText ($tableName + "[" + $objectName + "]") -SupportStatus "supported"))
+                    $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "measure" -ReferenceText ($tableName + "[" + $objectName + "]") -SupportStatus "supported" -SupportReason "qualified-measure-reference"))
                     continue
                 }
             }
 
-            $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "unknown" -ReferenceText ($tableName + "[" + $objectName + "]") -SupportStatus "unsupported"))
+            $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "unknown" -ReferenceText ($tableName + "[" + $objectName + "]") -SupportStatus "unsupported" -SupportReason "target-object-not-found"))
         }
 
         $withoutQualified = $normalized
@@ -361,11 +363,12 @@ function Get-PbiTmdlExternalReferences {
             if ($TargetInventory.MeasuresByName.ContainsKey($objectName)) {
                 $owners = @($TargetInventory.MeasuresByName[$objectName] | Select-Object -Unique)
                 $status = if ($owners.Count -eq 1) { "supported" } else { "manual-review" }
-                $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "measure" -ReferenceText ("[" + $objectName + "]") -SupportStatus $status))
+                $reason = if ($owners.Count -eq 1) { "unqualified-measure-reference" } else { "ambiguous-unqualified-measure-reference" }
+                $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "measure" -ReferenceText ("[" + $objectName + "]") -SupportStatus $status -SupportReason $reason))
                 continue
             }
 
-            $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "unknown" -ReferenceText ("[" + $objectName + "]") -SupportStatus "unsupported"))
+            $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "unknown" -ReferenceText ("[" + $objectName + "]") -SupportStatus "unsupported" -SupportReason "unresolved-unqualified-reference"))
         }
 
         foreach ($match in [regex]::Matches($withoutQualified, $tablePattern)) {
@@ -385,11 +388,11 @@ function Get-PbiTmdlExternalReferences {
             }
 
             if ($TargetInventory.Tables.Contains($tableName)) {
-                $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "table" -ReferenceText $tableName -SupportStatus "supported"))
+                $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "table" -ReferenceText $tableName -SupportStatus "supported" -SupportReason "table-reference"))
                 continue
             }
 
-            $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "table" -ReferenceText $tableName -SupportStatus "unsupported"))
+            $results.Add((New-PbiExternalReference -TableName $definition.TableName -ObjectName $definition.Name -ObjectType $definition.Type -ReferenceType "table" -ReferenceText $tableName -SupportStatus "unsupported" -SupportReason "unresolved-table-reference"))
         }
     }
 
@@ -431,6 +434,15 @@ function Get-PbiSimpleBindingCandidates {
 
         if ($normalized -match "^\[(.+?)\]$") {
             $measureName = $matches[1]
+            if (-not $TargetInventory.MeasuresByName.ContainsKey($measureName)) {
+                continue
+            }
+
+            $owners = @($TargetInventory.MeasuresByName[$measureName] | Select-Object -Unique)
+            if ($owners.Count -ne 1) {
+                continue
+            }
+
             $token = "MOD_BIND_" + (ConvertTo-PbiBindingTokenSuffix -Text $measureName)
             $candidates.Add([PSCustomObject]@{
                 tableName       = $definition.TableName

@@ -1,0 +1,15 @@
+table '_MOD Promo Qualified Inputs'
+	isHidden
+
+	measure 'Promo Qualified Input Sales' = Sales[Sales LE]
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition '_MOD Promo Qualified Inputs' = calculated
+		mode: import
+		source = Row("Column", BLANK())

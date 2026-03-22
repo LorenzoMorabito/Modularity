@@ -1,0 +1,16 @@
+table 'MOD Promo Qualified'
+
+	measure 'Promo Qualified Current Value' = '_MOD Promo Qualified Inputs'[Promo Qualified Input Sales]
+		formatString: #,0
+		displayFolder: Outputs
+
+	column Column
+		isHidden
+		formatString: 0
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+	partition 'MOD Promo Qualified' = calculated
+		mode: import
+		source = Row("Column", BLANK())
