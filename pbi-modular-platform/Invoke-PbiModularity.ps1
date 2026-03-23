@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("list", "install", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles", "new-authoring-model", "sync-pack-from-authoring", "new-promotion-baseline", "promote-semantic-module", "test-promotion")]
+    [ValidateSet("list", "install", "install-wizard", "upgrade", "diff", "rollback", "validate", "test", "new-module", "suggest-bindings", "list-binding-profiles", "new-authoring-model", "sync-pack-from-authoring", "new-promotion-baseline", "promote-semantic-module", "test-promotion")]
     [string]$Command,
 
     [string]$WorkspaceRoot,
@@ -45,6 +45,9 @@ switch ($Command) {
     }
     "install" {
         & $installerScript -Command install-module -WorkspaceRoot $WorkspaceRoot -ProjectPath $ProjectPath -Domain $Domain -ModuleId $ModuleId -MappingFile $MappingFile -BindingProfileId $BindingProfileId -SaveBindingProfileAs $SaveBindingProfileAs -Interactive:$Interactive -InteractiveUi:$InteractiveUi -AcceptSuggested:$AcceptSuggested -ActivateInstalledPage:$ActivateInstalledPage -Force:$Force -FailOnGovernanceBreach:$FailOnGovernanceBreach
+    }
+    "install-wizard" {
+        & $installerScript -Command install-wizard -WorkspaceRoot $WorkspaceRoot -ProjectPath $ProjectPath -Domain $Domain -ModuleId $ModuleId -BindingProfileId $BindingProfileId -SaveBindingProfileAs $SaveBindingProfileAs -ActivateInstalledPage:$ActivateInstalledPage -Force:$Force
     }
     "upgrade" {
         & $installerScript -Command upgrade-module -WorkspaceRoot $WorkspaceRoot -ProjectPath $ProjectPath -Domain $Domain -ModuleId $ModuleId -MappingFile $MappingFile -BindingProfileId $BindingProfileId -SaveBindingProfileAs $SaveBindingProfileAs -Interactive:$Interactive -InteractiveUi:$InteractiveUi -AcceptSuggested:$AcceptSuggested -ActivateInstalledPage:$ActivateInstalledPage -Force:$Force -FailOnGovernanceBreach:$FailOnGovernanceBreach

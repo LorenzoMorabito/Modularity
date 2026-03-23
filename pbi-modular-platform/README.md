@@ -34,6 +34,7 @@ Capabilita implementate:
 - `list-modules`
 - `validate-project`
 - `install-module`
+- `install-wizard`
 - `upgrade-module`
 - `diff-module`
 - `rollback-module`
@@ -67,6 +68,7 @@ Guided binding implementato:
 - `bindingContract` opzionale nel manifest per moduli cross-domain
 - discovery dei candidati da semantic model target
 - suggestioni automatiche per measure e column bindings
+- wizard WinForms `install-wizard` per orchestrare selezione target, pre-check, binding UI e install finale
 - profili di binding salvati nel consumer sotto `module-config/.../mapping-profiles`
 - supporto CLI a `-Interactive`, `-AcceptSuggested`, `-BindingProfileId`, `-SaveBindingProfileAs`
 

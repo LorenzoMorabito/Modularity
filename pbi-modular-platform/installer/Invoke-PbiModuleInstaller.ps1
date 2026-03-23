@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("list-modules", "validate-project", "install-module", "upgrade-module", "diff-module", "rollback-module", "set-data-source-path", "suggest-bindings", "list-binding-profiles")]
+    [ValidateSet("list-modules", "validate-project", "install-module", "install-wizard", "upgrade-module", "diff-module", "rollback-module", "set-data-source-path", "suggest-bindings", "list-binding-profiles")]
     [string]$Command,
 
     [string]$WorkspaceRoot,
@@ -35,7 +35,8 @@ $modulePaths = @(
     "Modules/Domains/Marketing/Pbi.Marketing.psm1",
     "Modules/Services/Pbi.ModuleInstaller.psm1",
     "Modules/Services/Pbi.Governance.psm1",
-    "Modules/Services/Pbi.ModuleLifecycle.psm1"
+    "Modules/Services/Pbi.ModuleLifecycle.psm1",
+    "Modules/Core/Pbi.InstallWizard.psm1"
 )
 
 foreach ($relativeModulePath in $modulePaths) {
@@ -112,6 +113,33 @@ switch ($Command) {
             Write-Host ("  Governance: {0}" -f $result.Governance.status)
             Write-Host ("  Metadata: {0}" -f $result.Project.StateFilePath)
             Write-Host ("  Log: {0}" -f $result.LogPath)
+        }
+    }
+    "install-wizard" {
+        $result = Invoke-PbiInstallWizard `
+            -WorkspaceRoot $WorkspaceRoot `
+            -ProjectPath $ProjectPath `
+            -Domain $Domain `
+            -ModuleId $ModuleId `
+            -BindingProfileId $BindingProfileId `
+            -SaveBindingProfileAs $SaveBindingProfileAs `
+            -ActivateInstalledPage:$ActivateInstalledPage `
+            -Force:$Force
+
+        if ($result.InstallResult) {
+            Write-PbiSuccess ("Install wizard completed for module {0} in project {1}" -f $result.Module.ModuleId, $result.Project.ProjectId)
+            Write-Host ("  Binding profile: {0}" -f $result.BindingProfileId)
+            if ($result.InstallResult.SnapshotId) {
+                Write-Host ("  Snapshot: {0}" -f $result.InstallResult.SnapshotId)
+            }
+            if ($result.InstallResult.LogPath) {
+                Write-Host ("  Log: {0}" -f $result.InstallResult.LogPath)
+            }
+        }
+        elseif ($result.ValidationResult) {
+            Write-PbiInfo ("Install wizard completed pre-check for module {0} in project {1} without install." -f $result.Module.ModuleId, $result.Project.ProjectId)
+            Write-Host ("  Binding profile: {0}" -f $result.BindingProfileId)
+            Write-Host ("  Validation: {0}" -f $(if ($result.ValidationResult.IsValid) { "PASS" } else { "FAIL" }))
         }
     }
     "upgrade-module" {
