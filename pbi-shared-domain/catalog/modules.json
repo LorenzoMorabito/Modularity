@@ -120,6 +120,16 @@
       "consumerCompatibility": [
         "shared/generated-by-promotion-v1"
       ]
+    },
+    {
+      "moduleId": "switch_dimension_mvp",
+      "version": "0.1.0",
+      "status": "prototype",
+      "path": "packages/switch_dimension_mvp",
+      "displayName": "Switch Dimension MVP",
+      "consumerCompatibility": [
+        "shared/any-semantic-model-with-at-least-four-categorical-columns"
+      ]
     }
   ]
 }

@@ -17,7 +17,7 @@ Ogni package installabile della cartella `packages/` include una scheda `PACKAGE
 
 ## Installabili disponibili
 
-I package installabili oggi disponibili nel dominio `shared` sono `11`. Questa lista serve come indice rapido per capire quale pack cercare in base al bisogno dell'utente.
+I package installabili oggi disponibili nel dominio `shared` sono `13`. Questa lista serve come indice rapido per capire quale pack cercare in base al bisogno dell'utente.
 
 Le descrizioni qui sotto sono volutamente in linguaggio business. I dettagli tecnici di binding, prerequisiti e limiti restano nelle singole schede `PACKAGE.md`.
 
@@ -64,6 +64,14 @@ Serve per separare le entita in gruppi tipo top spender, fascia intermedia e cod
 **`topn_target_driver_bundle_mvp` `0.2.0`**
 
 Serve per mostrare le top entita in base a una metrica scelta, con possibilita di cambiare criterio di classifica e con una pagina report gia pronta per iniziare.
+
+**`switch_measure_mvp` `0.1.0`**
+
+Serve per lasciare all'utente la scelta della misura da visualizzare, per esempio passare da Sales a Units con un selettore unico gia pronto nel modello.
+
+**`switch_dimension_mvp` `0.1.0`**
+
+Serve per lasciare all'utente la scelta della dimensione categoriale da usare nei visual, per esempio passare da Country a Corporation, Product o Molecule con un field parameter gia installabile.
 
 ## Package presenti ma non installabili
 

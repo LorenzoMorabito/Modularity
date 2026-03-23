@@ -1,0 +1,97 @@
+{
+  "moduleId": "switch_dimension_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "prototype",
+  "description": "Semantic field-parameter selector that lets the user switch the categorical dimension used by visuals from a single reusable table.",
+  "requires": {
+    "coreMeasures": [],
+    "coreColumns": [
+      "MOD_BIND_DIMENSION_1[Value]",
+      "MOD_BIND_DIMENSION_2[Value]",
+      "MOD_BIND_DIMENSION_3[Value]",
+      "MOD_BIND_DIMENSION_4[Value]"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "dimension_1",
+        "bindingKey": "MOD_BIND_DIMENSION_1[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Dimension 1",
+        "description": "Primary categorical dimension exposed by the selector.",
+        "defaultValue": "Country[Country]",
+        "suggestions": [
+          "Country[Country]",
+          "Corporation[Corporation]",
+          "Product[Product]",
+          "Molecule[Molecule]"
+        ]
+      },
+      {
+        "id": "dimension_2",
+        "bindingKey": "MOD_BIND_DIMENSION_2[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Dimension 2",
+        "description": "Second categorical dimension exposed by the selector.",
+        "defaultValue": "Corporation[Corporation]",
+        "suggestions": [
+          "Corporation[Corporation]",
+          "Channel[Our Sales Channel]",
+          "Country[Region]",
+          "Molecule[Molecule]"
+        ]
+      },
+      {
+        "id": "dimension_3",
+        "bindingKey": "MOD_BIND_DIMENSION_3[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Dimension 3",
+        "description": "Third categorical dimension exposed by the selector.",
+        "defaultValue": "Product[Product]",
+        "suggestions": [
+          "Product[Product]",
+          "ATC[ATC4]",
+          "Pack[Pack]",
+          "Disease[Disease]"
+        ]
+      },
+      {
+        "id": "dimension_4",
+        "bindingKey": "MOD_BIND_DIMENSION_4[Value]",
+        "kind": "column",
+        "required": true,
+        "label": "Dimension 4",
+        "description": "Fourth categorical dimension exposed by the selector.",
+        "defaultValue": "Molecule[Molecule]",
+        "suggestions": [
+          "Molecule[Molecule]",
+          "Channel[Our Sales Channel]",
+          "Country[Region]",
+          "Product[Product]"
+        ]
+      }
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Switch Dimension",
+    "hiddenTables": []
+  },
+  "provides": {
+    "semanticTables": [
+      "MOD Switch Dimension"
+    ]
+  }
+}

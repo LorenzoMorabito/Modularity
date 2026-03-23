@@ -34,6 +34,8 @@ Package attualmente catalogati:
   - `spend_bucket_pareto_mvp` `0.1.0`
   - `kpi_delta_signal_mvp` `0.1.0`
   - `topn_target_driver_bundle_mvp` `0.2.0`
+  - `switch_measure_mvp` `0.1.0`
+  - `switch_dimension_mvp` `0.1.0`
 
 Capabilita oggi operative della platform:
 

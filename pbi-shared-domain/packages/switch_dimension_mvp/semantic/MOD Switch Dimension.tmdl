@@ -1,0 +1,43 @@
+table 'MOD Switch Dimension'
+
+	column 'Switch Dimension'
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Switch Dimension Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Switch Dimension Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Switch Dimension Fields'
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Switch Dimension Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Switch Dimension Order'
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'MOD Switch Dimension' = calculated
+		mode: import
+		source =
+				{
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_1[Value]}}", NAMEOF('MOD_BIND_DIMENSION_1'[Value]), 0),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_2[Value]}}", NAMEOF('MOD_BIND_DIMENSION_2'[Value]), 1),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_3[Value]}}", NAMEOF('MOD_BIND_DIMENSION_3'[Value]), 2),
+				    ("{{bindingLabel:MOD_BIND_DIMENSION_4[Value]}}", NAMEOF('MOD_BIND_DIMENSION_4'[Value]), 3)
+				}
