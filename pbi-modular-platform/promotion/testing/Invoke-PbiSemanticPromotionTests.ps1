@@ -74,6 +74,15 @@ function Normalize-PbiText {
     return (($Text -replace "`r`n", "`n") -replace "`r", "`n").TrimEnd()
 }
 
+function Get-PbiComparableText {
+    param([AllowNull()][string]$Text)
+
+    $normalized = Normalize-PbiText -Text $Text
+    $normalized = [regex]::Replace($normalized, "\x1b\[[0-9;]*m", "")
+    $normalized = [regex]::Replace($normalized, "\s+", " ")
+    return $normalized.Trim()
+}
+
 function Get-PbiNormalizedFileContent {
     param([Parameter(Mandatory = $true)][string]$Path)
 
@@ -110,7 +119,9 @@ function Assert-PbiContains {
         [Parameter(Mandatory = $true)][string]$Message
     )
 
-    if ($ActualText -notlike ("*" + $ExpectedFragment + "*")) {
+    $comparableActual = Get-PbiComparableText -Text $ActualText
+    $comparableExpected = Get-PbiComparableText -Text $ExpectedFragment
+    if ($comparableActual -notlike ("*" + $comparableExpected + "*")) {
         throw ("{0} Missing fragment '{1}'." -f $Message, $ExpectedFragment)
     }
 }
