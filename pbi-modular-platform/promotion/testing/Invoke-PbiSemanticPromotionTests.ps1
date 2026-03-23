@@ -183,6 +183,38 @@ function Copy-PbiFixtureTablesToProject {
     }
 }
 
+function Add-PbiModelTableRefsToProject {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [Parameter(Mandatory = $true)][string[]]$TableNames
+    )
+
+    $modelPath = Join-Path $Project.SemanticModelPath "definition\model.tmdl"
+    $lines = [System.Collections.Generic.List[string]]@(Get-Content -Path $modelPath)
+    $cultureIndex = $lines.FindIndex([Predicate[string]]{ param($line) $line -match "^\s*ref cultureInfo\b" })
+    if ($cultureIndex -lt 0) {
+        $cultureIndex = $lines.Count
+    }
+
+    foreach ($tableName in @($TableNames)) {
+        $refLine = if ($tableName -match "\s") {
+            "ref table '" + $tableName.Replace("'", "''") + "'"
+        }
+        else {
+            "ref table " + $tableName
+        }
+
+        if ($lines.Contains($refLine)) {
+            continue
+        }
+
+        $lines.Insert($cultureIndex, $refLine)
+        $cultureIndex++
+    }
+
+    Write-PbiUtf8File -Path $modelPath -Content (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
+}
+
 function Invoke-PbiModularityCommand {
     param(
         [Parameter(Mandatory = $true)][string]$ScriptPath,
@@ -359,6 +391,32 @@ function Invoke-PbiPromotionUnitTests {
         Assert-PbiEqual -Actual $definitions[3].Type -Expected "partition" -Message "Fourth definition should be a partition."
     }
 
+    $results += Invoke-PbiPromotionTestCase -Name "unit.tmdl-parse-hidden-measure-property" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $fixturePath = Join-Path $caseRoot "HiddenMeasureFixture.tmdl"
+        Write-PbiUtf8File -Path $fixturePath -Content @"
+table 'Fixture'
+
+	measure 'Hidden Measure' =
+			[Sales LE]
+		isHidden
+
+	column Column
+		isHidden
+		sourceColumn: [Column]
+
+	partition 'Fixture' = calculated
+		mode: import
+		source = ROW ( "Column", BLANK() )
+"@
+
+        $definitions = @(Get-PbiTmdlObjectDefinitions -Path $fixturePath)
+        $measureDefinition = @($definitions | Where-Object { $_.Type -eq "measure" } | Select-Object -First 1)
+        Assert-PbiCondition -Condition ($null -ne $measureDefinition) -Message "Expected one measure definition in the hidden-measure fixture."
+        Assert-PbiEqual -Actual $measureDefinition.ExpressionText -Expected "[Sales LE]" -Message "The parser should stop measure expressions before bare TMDL properties like isHidden."
+    }
+
     $results += Invoke-PbiPromotionTestCase -Name "unit.external-reference-classification" -ArtifactRoot $ArtifactRoot -Action {
         param($caseRoot)
 
@@ -492,6 +550,7 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "baseline.log")
 
         Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFixtureInputDirectory -ScenarioName "simple") -Project $project
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @("_MOD Promo Test Inputs", "MOD Promo Test")
         $delta = Invoke-PbiPromotionInternal -ScriptBlock {
             param($PbipPath, $CurrentModuleId)
             $projectObject = Resolve-PbiConsumerProject -ProjectPath $PbipPath
@@ -519,6 +578,7 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "baseline.log")
 
         Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFixtureInputDirectory -ScenarioName "simple") -Project $project
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @("_MOD Promo Test Inputs", "MOD Promo Test")
         $promotionResult = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
             WorkspaceRoot = $resolvedWorkspaceRoot
             ProjectPath   = $project.PbipPath
@@ -560,6 +620,7 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "baseline.log")
 
         Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFixtureInputDirectory -ScenarioName "multi") -Project $project
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @("_MOD Promo Multi Inputs", "_MOD Promo Multi Slots", "MOD Promo Multi")
         $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
             WorkspaceRoot = $resolvedWorkspaceRoot
             ProjectPath   = $project.PbipPath
@@ -639,6 +700,7 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "baseline.log")
 
         Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFailureFixtureInputDirectory -ScenarioName "strict-outside-inputs") -Project $project
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @("MOD Unsupported Promo")
         $failure = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
             WorkspaceRoot = $resolvedWorkspaceRoot
             ProjectPath   = $project.PbipPath
@@ -664,6 +726,7 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "baseline.log")
 
         Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFailureFixtureInputDirectory -ScenarioName "qualified-measure-in-inputs") -Project $project
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @("_MOD Promo Qualified Inputs", "MOD Promo Qualified")
         $failure = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
             WorkspaceRoot = $resolvedWorkspaceRoot
             ProjectPath   = $project.PbipPath
@@ -691,6 +754,7 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "baseline.log")
 
         Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFixtureInputDirectory -ScenarioName "simple") -Project $project
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @("_MOD Promo Test Inputs", "MOD Promo Test")
         $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
             WorkspaceRoot = $resolvedWorkspaceRoot
             ProjectPath   = $project.PbipPath
@@ -746,6 +810,7 @@ function Invoke-PbiPromotionIntegrationTests {
         }) -LogPath (Join-Path $caseRoot "roundtrip-baseline.log")
 
         Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFixtureInputDirectory -ScenarioName "simple") -Project $workbenchProject
+        Add-PbiModelTableRefsToProject -Project $workbenchProject -TableNames @("_MOD Promo Test Inputs", "MOD Promo Test")
         $null = Invoke-PbiModularityCommand -ScriptPath $sandboxInvokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
             WorkspaceRoot = $sandboxWorkspaceRoot
             ProjectPath   = $workbenchProject.PbipPath

@@ -81,6 +81,15 @@ function Get-PbiFileSha256 {
     return (Get-FileHash -Path $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
+function Get-PbiStringSha256 {
+    param([AllowNull()][string]$Text)
+
+    $value = if ($null -eq $Text) { "" } else { $Text }
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($value)
+    $hashBytes = [System.Security.Cryptography.SHA256]::HashData($bytes)
+    return ([System.BitConverter]::ToString($hashBytes).Replace("-", "").ToLowerInvariant())
+}
+
 function Get-PbiSemanticPromotionTrackedGlobalFiles {
     param([Parameter(Mandatory = $true)]$Project)
 
@@ -118,6 +127,119 @@ function Get-PbiTmdlNameFromLine {
     }
 
     return ""
+}
+
+function Get-PbiTmdlRefTableNamesFromPath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $tableNames = New-Object System.Collections.Generic.List[string]
+    foreach ($line in (Get-Content -Path $Path)) {
+        if ($line -notmatch "^\s*ref table\b") {
+            continue
+        }
+
+        $tableName = Get-PbiTmdlNameFromLine -Line ($line -replace "^\s*ref table\b", "table")
+        if (-not [string]::IsNullOrWhiteSpace($tableName)) {
+            $tableNames.Add($tableName)
+        }
+    }
+
+    return @($tableNames | Sort-Object -Unique)
+}
+
+function Get-PbiNormalizedModelContentWithoutTableRefs {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $lines = @(
+        Get-Content -Path $Path |
+            Where-Object { $_ -notmatch "^\s*ref table\b" }
+    )
+
+    return ((($lines -join [Environment]::NewLine).Replace("`r", "")) -replace "`r`n", "`n").TrimEnd()
+}
+
+function Get-PbiNormalizedModelContentRemovingTableRefs {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [AllowEmptyCollection()][string[]]$TableNames = @()
+    )
+
+    $tableSet = @($TableNames | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+    $lines = New-Object System.Collections.Generic.List[string]
+
+    foreach ($line in (Get-Content -Path $Path)) {
+        if ($line -match "^\s*ref table\b") {
+            $tableName = Get-PbiTmdlNameFromLine -Line ($line -replace "^\s*ref table\b", "table")
+            if ($tableSet -contains $tableName) {
+                continue
+            }
+        }
+
+        $lines.Add($line)
+    }
+
+    return ((($lines.ToArray() -join [Environment]::NewLine).Replace("`r", "")) -replace "`r`n", "`n").TrimEnd()
+}
+
+function Get-PbiRawModelContentRemovingTableRefs {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [AllowEmptyCollection()][string[]]$TableNames = @()
+    )
+
+    $content = Get-Content -Raw -Path $Path
+    foreach ($tableName in @($TableNames | Sort-Object Length -Descending)) {
+        $refLine = if ($tableName -match "\s") {
+            "ref table '" + $tableName.Replace("'", "''") + "'"
+        }
+        else {
+            "ref table " + $tableName
+        }
+
+        $pattern = "(?m)^" + [regex]::Escape($refLine) + "\r?\n?"
+        $content = [regex]::Replace($content, $pattern, "")
+    }
+
+    return $content
+}
+
+function Test-PbiSemanticPromotionAllowedModelDelta {
+    param(
+        [Parameter(Mandatory = $true)]$BaselineEntry,
+        [Parameter(Mandatory = $true)][string]$CurrentPath,
+        [AllowEmptyCollection()][string[]]$NewTables = @()
+    )
+
+    $currentBodyWithoutRefs = Get-PbiNormalizedModelContentWithoutTableRefs -Path $CurrentPath
+    $currentBodySha256 = Get-PbiStringSha256 -Text $currentBodyWithoutRefs
+
+    $newTableSet = @($NewTables | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+    $currentRefs = @(Get-PbiTmdlRefTableNamesFromPath -Path $CurrentPath)
+
+    if (-not $BaselineEntry.PSObject.Properties["modelTableRefs"] -or -not $BaselineEntry.PSObject.Properties["modelBodySha256"]) {
+        $candidateBaselineContent = Get-PbiRawModelContentRemovingTableRefs -Path $CurrentPath -TableNames $newTableSet
+        $candidateBaselineSha256 = Get-PbiStringSha256 -Text $candidateBaselineContent
+        return ($candidateBaselineSha256 -eq [string]$BaselineEntry.sha256)
+    }
+
+    $baselineRefs = @($BaselineEntry.modelTableRefs | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+
+    if ($currentBodySha256 -ne [string]$BaselineEntry.modelBodySha256) {
+        return $false
+    }
+
+    $removedRefs = @($baselineRefs | Where-Object { $currentRefs -notcontains $_ })
+    if ($removedRefs.Count -gt 0) {
+        return $false
+    }
+
+    $addedRefs = @($currentRefs | Where-Object { $baselineRefs -notcontains $_ })
+    $invalidAddedRefs = @($addedRefs | Where-Object { $newTableSet -notcontains $_ })
+    if ($invalidAddedRefs.Count -gt 0) {
+        return $false
+    }
+
+    return $true
 }
 
 function Get-PbiTmdlTableNameFromFile {
@@ -299,10 +421,18 @@ function New-PbiSemanticPromotionBaselineRecord {
 
     $globalEntries = New-Object System.Collections.Generic.List[object]
     foreach ($path in (Get-PbiSemanticPromotionTrackedGlobalFiles -Project $Project)) {
-        $globalEntries.Add([PSCustomObject]@{
-            relativePath = (Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path $path)
+        $relativePath = (Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path $path)
+        $entry = [ordered]@{
+            relativePath = $relativePath
             sha256       = (Get-PbiFileSha256 -Path $path)
-        })
+        }
+
+        if ($relativePath -like "*/model.tmdl" -or $relativePath -like "*\model.tmdl") {
+            $entry["modelTableRefs"] = @(Get-PbiTmdlRefTableNamesFromPath -Path $path)
+            $entry["modelBodySha256"] = (Get-PbiStringSha256 -Text (Get-PbiNormalizedModelContentWithoutTableRefs -Path $path))
+        }
+
+        $globalEntries.Add([PSCustomObject]$entry)
     }
 
     $tableArray = [object[]]$tableEntries.ToArray()
@@ -390,8 +520,14 @@ Export-ModuleMember -Function `
     Get-PbiSemanticPromotionProjectTablePath, `
     Get-PbiSemanticPromotionTableFiles, `
     Get-PbiFileSha256, `
+    Get-PbiStringSha256, `
     Get-PbiSemanticPromotionTrackedGlobalFiles, `
     Get-PbiTmdlNameFromLine, `
+    Get-PbiTmdlRefTableNamesFromPath, `
+    Get-PbiNormalizedModelContentWithoutTableRefs, `
+    Get-PbiNormalizedModelContentRemovingTableRefs, `
+    Get-PbiRawModelContentRemovingTableRefs, `
+    Test-PbiSemanticPromotionAllowedModelDelta, `
     Get-PbiTmdlTableNameFromFile, `
     Resolve-PbiSemanticPromotionOutputRoot, `
     Resolve-PbiSemanticPromotionDomainRoot, `

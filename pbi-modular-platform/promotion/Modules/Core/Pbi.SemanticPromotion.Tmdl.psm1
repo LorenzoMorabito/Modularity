@@ -19,7 +19,11 @@ function Get-PbiTmdlLeadingIndentCount {
 function Test-PbiTmdlPropertyLine {
     param([Parameter(Mandatory = $true)][string]$Line)
 
-    return ($Line -match "^\s*[A-Za-z_][A-Za-z0-9_-]*\s*:")
+    if ($Line -match "^\s*[A-Za-z_][A-Za-z0-9_-]*\s*:") {
+        return $true
+    }
+
+    return ($Line -match "^\s*(isHidden|isSimpleMeasure|isSimpleLabel|isNameInferred|isDefault|isPrivate|isUnique|isNullable|showAsVariationsOnly)\s*$")
 }
 
 function Get-PbiTmdlObjectDefinitions {
@@ -63,14 +67,14 @@ function Get-PbiTmdlObjectDefinitions {
                 $lookahead++
             }
 
-            $definitions += [PSCustomObject]@{
-                Type           = "measure"
-                Name           = $name
-                TableName      = $tableName
-                FilePath       = $Path
-                StartLine      = $index + 1
-                ExpressionText = ($expressionLines -join [Environment]::NewLine).TrimEnd()
-            }
+                $definitions += [PSCustomObject]@{
+                    Type           = "measure"
+                    Name           = $name
+                    TableName      = $tableName
+                    FilePath       = $Path
+                    StartLine      = $index + 1
+                    ExpressionText = ($expressionLines -join [Environment]::NewLine).Trim()
+                }
 
             $index = $lookahead
             continue
@@ -115,7 +119,7 @@ function Get-PbiTmdlObjectDefinitions {
                     TableName      = $tableName
                     FilePath       = $Path
                     StartLine      = $index + 1
-                    ExpressionText = ($expressionLines -join [Environment]::NewLine).TrimEnd()
+                    ExpressionText = ($expressionLines -join [Environment]::NewLine).Trim()
                 }
 
                 $index = $lookahead

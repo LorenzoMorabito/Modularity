@@ -66,12 +66,17 @@ Bloccato automaticamente:
 
 - modifica di tabelle target-owned
 - modifica di `relationships.tmdl`
-- modifica di `model.tmdl`, `database.tmdl`, `expressions.tmdl`
+- modifica di `database.tmdl`, `expressions.tmdl`
 - modifica di `cultures/*`
 - riferimenti esterni fuori dal layer `_MOD ... Inputs`
 - riferimenti a misura qualificati tipo `Sales[Sales LE]`
 - riferimenti tabellari esterni tipo `ALL(Sales)`
 - riferimenti a misura non qualificati ma ambigui nel target
+
+Eccezione controllata su `model.tmdl`:
+
+- il V1 consente il delta additivo deterministico generato da Power BI Desktop quando vengono aggiunte nuove tabelle module-owned, cioe l'aggiunta dei soli `ref table ...` relativi alle nuove tabelle `MOD/_MOD`
+- qualsiasi altra modifica a `model.tmdl` resta bloccata
 
 ## Support Matrix V1
 

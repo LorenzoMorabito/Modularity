@@ -88,7 +88,7 @@ Workflow authoring attuale:
 Workflow promotion V1:
 
 - `new-promotion-baseline` congela il baseline del workbench Desktop-first in modalita `byPath-local-workbench`
-- `promote-semantic-module` estrae solo nuove tabelle module-owned, blocca modifiche fuori perimetro, accetta solo pattern binding strict supportati, genera un package semantic-only installabile e aggiorna il catalogo del dominio quando l'output ricade nel workspace governato
+- `promote-semantic-module` estrae solo nuove tabelle module-owned, blocca modifiche fuori perimetro, accetta solo pattern binding strict supportati e consente solo il delta additivo sicuro su `model.tmdl` (`ref table` delle nuove tabelle), genera un package semantic-only installabile e aggiorna il catalogo del dominio quando l'output ricade nel workspace governato
 - `test-promotion` esegue unit test e integration test versionati del promotore semantic, inclusi golden path, failure path, idempotenza e round-trip installativo
 
 ## Posizionamento nella repo

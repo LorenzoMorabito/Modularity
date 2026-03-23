@@ -140,6 +140,13 @@ function Get-PbiSemanticPromotionDelta {
         $absolutePath = Join-Path $Project.ProjectRoot ([string]$entry.relativePath)
         $currentHash = Get-PbiFileSha256 -Path $absolutePath
         if ($currentHash -ne [string]$entry.sha256) {
+            if (
+                (([string]$entry.relativePath) -like "*/model.tmdl" -or ([string]$entry.relativePath) -like "*\model.tmdl") -and
+                (Test-PbiSemanticPromotionAllowedModelDelta -BaselineEntry $entry -CurrentPath $absolutePath -NewTables @($newTables))
+            ) {
+                continue
+            }
+
             $blockedFiles.Add([string]$entry.relativePath)
         }
     }

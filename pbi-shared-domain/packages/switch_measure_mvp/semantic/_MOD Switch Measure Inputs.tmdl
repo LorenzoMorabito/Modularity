@@ -1,0 +1,37 @@
+table '_MOD Switch Measure Inputs'
+	isHidden
+	lineageTag: 3871ef01-222b-4dce-a3e1-2d301aedf940
+
+	measure 'Switch Measure Input Sales' =
+			
+			[MOD_BIND_SALES_LE]
+		isHidden
+		lineageTag: e737ed23-33ca-49b6-997a-034d9ca37830
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Switch Measure Input Units' =
+			
+			[MOD_BIND_COUNTING_UNITS]
+		formatString: 0
+		isHidden
+		lineageTag: b8a0f3b3-1aed-43b0-983c-86b411b6465e
+
+	column Column
+		isHidden
+		formatString: 0
+		lineageTag: d37a269e-4f57-4297-a99b-f53b9ece1c70
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '_MOD Switch Measure Inputs' = calculated
+		mode: import
+		source =
+				
+				ROW ( "Column", BLANK() )
+
+	annotation PBI_Id = 793f69fb46e0469e905c544a2df5db75
+

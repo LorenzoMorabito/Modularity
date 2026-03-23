@@ -110,6 +110,16 @@
       "consumerCompatibility": [
         "shared/any-semantic-model-with-rankable-dimensions"
       ]
+    },
+    {
+      "moduleId": "switch_measure_mvp",
+      "version": "0.1.0",
+      "status": "prototype",
+      "path": "packages/switch_measure_mvp",
+      "displayName": "Switch Measure MVP",
+      "consumerCompatibility": [
+        "shared/generated-by-promotion-v1"
+      ]
     }
   ]
 }

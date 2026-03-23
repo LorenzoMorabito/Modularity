@@ -1,0 +1,62 @@
+{
+  "moduleId": "switch_measure_mvp",
+  "version": "0.1.0",
+  "domain": "shared",
+  "type": "semantic",
+  "classification": "semantic-light",
+  "dependencies": {
+    "modules": [],
+    "capabilities": []
+  },
+  "semanticImpact": "additive",
+  "status": "prototype",
+  "description": "Semantic selector that lets the user switch between bound measures from a single reusable facade table.",
+  "requires": {
+    "coreMeasures": [
+      "MOD_BIND_COUNTING_UNITS",
+      "MOD_BIND_SALES_LE"
+    ],
+    "coreColumns": []
+  },
+  "provides": {
+    "semanticTables": [
+      "_MOD Switch Measure Inputs",
+      "MOD Switch Measure"
+    ]
+  },
+  "semanticUx": {
+    "primaryTable": "MOD Switch Measure",
+    "hiddenTables": [
+      "_MOD Switch Measure Inputs"
+    ]
+  },
+  "bindingContract": {
+    "mode": "guided",
+    "roles": [
+      {
+        "id": "counting_units",
+        "bindingKey": "MOD_BIND_COUNTING_UNITS",
+        "kind": "measure",
+        "required": true,
+        "label": "Counting Units",
+        "description": "Bind target measure for Switch Measure Input Units.",
+        "defaultValue": "Counting Units",
+        "suggestions": [
+          "Counting Units"
+        ]
+      },
+      {
+        "id": "sales_le",
+        "bindingKey": "MOD_BIND_SALES_LE",
+        "kind": "measure",
+        "required": true,
+        "label": "Sales LE",
+        "description": "Bind target measure for Switch Measure Input Sales.",
+        "defaultValue": "Sales LE",
+        "suggestions": [
+          "Sales LE"
+        ]
+      }
+    ]
+  }
+}

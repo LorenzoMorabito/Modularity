@@ -1,0 +1,56 @@
+table 'MOD Switch Measure'
+	lineageTag: 9ed3a36a-8d8b-42c9-af7c-e81fe6f9eb18
+
+	measure 'Switch Measure Value' =
+			
+			SWITCH (
+			    SELECTEDVALUE ( 'MOD Switch Measure'[MetricKey], "sales" ),
+			    "sales", '_MOD Switch Measure Inputs'[Switch Measure Input Sales],
+			    "units", '_MOD Switch Measure Inputs'[Switch Measure Input Units],
+			    BLANK()
+			)
+		lineageTag: 5571a48f-2ac1-453e-b2a7-6042da12753f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MetricKey
+		lineageTag: edce745e-0ec4-4cde-9f96-3a153b0b8e74
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	column MetricLabel
+		lineageTag: 361e6678-a9a8-43c1-a521-eadfe9e5dc98
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MetricLabel]
+
+		annotation SummarizationSetBy = Automatic
+
+	column SortOrder
+		formatString: 0
+		lineageTag: 704f26c7-a1b2-4cee-bae5-8b131a03201b
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [SortOrder]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'MOD Switch Measure' = calculated
+		mode: import
+		source =
+				
+				DATATABLE (
+				    "MetricKey", STRING,
+				    "MetricLabel", STRING,
+				    "SortOrder", INTEGER,
+				    {
+				        { "sales", "Sales", 1 },
+				        { "units", "Units", 2 }
+				    }
+				)
+
+	annotation PBI_Id = 377b0056b28342ef82a8846a9689a5ea
+
