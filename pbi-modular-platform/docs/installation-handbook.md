@@ -88,6 +88,21 @@ pwsh -NoProfile -File "C:\work\MEN_Marketing\PBI_PROJECTS\pbi-modularity\pbi-mod
 
 ### Step 2: aprire il wizard
 
+Puoi aprire il wizard in due modi:
+
+- modalita guidata completa, passando solo `WorkspaceRoot`
+- modalita precompilata, passando anche `ProjectPath`, `Domain` e `ModuleId`
+
+Versione minima:
+
+```powershell
+pwsh -NoProfile -File "C:\work\MEN_Marketing\PBI_PROJECTS\pbi-modularity\pbi-modular-platform\Invoke-PbiModularity.ps1" `
+  -Command install-wizard `
+  -WorkspaceRoot "C:\work\MEN_Marketing\PBI_PROJECTS\pbi-modularity"
+```
+
+Versione precompilata:
+
 ```powershell
 pwsh -NoProfile -File "C:\work\MEN_Marketing\PBI_PROJECTS\pbi-modularity\pbi-modular-platform\Invoke-PbiModularity.ps1" `
   -Command install-wizard `

@@ -76,6 +76,7 @@ Design evolutivi documentati:
 
 - [docs/lifecycle.md](./docs/lifecycle.md)
 - [docs/installation-handbook.md](./docs/installation-handbook.md)
+- [docs/desktop-pack-setup-handbook.md](./docs/desktop-pack-setup-handbook.md)
 - [docs/interactive-binding-design.md](./docs/interactive-binding-design.md)
 - [docs/package-semantic-standard.md](./docs/package-semantic-standard.md)
 - [docs/package-documentation-standard.md](./docs/package-documentation-standard.md)
@@ -91,7 +92,7 @@ Workflow authoring attuale:
 Workflow promotion V1:
 
 - `new-promotion-baseline` congela il baseline del workbench Desktop-first in modalita `byPath-local-workbench`
-- `promote-semantic-module` estrae solo nuove tabelle module-owned, blocca modifiche fuori perimetro, accetta solo pattern binding strict supportati e consente solo il delta additivo sicuro su `model.tmdl` (`ref table` delle nuove tabelle), genera un package semantic-only installabile e aggiorna il catalogo del dominio quando l'output ricade nel workspace governato
+- `promote-semantic-module` estrae solo nuove tabelle module-owned, blocca modifiche fuori perimetro, accetta solo pattern binding strict supportati, consente il delta additivo sicuro su `model.tmdl` (`ref table` delle nuove tabelle) e neutralizza gli artefatti standard `Auto date/time` (`LocalDateTable_*`, `DateTableTemplate_*`, relazioni e variation collegate), genera un package semantic-only installabile e aggiorna il catalogo del dominio quando l'output ricade nel workspace governato
 - `test-promotion` esegue unit test e integration test versionati del promotore semantic, inclusi golden path, failure path, idempotenza e round-trip installativo
 
 ## Posizionamento nella repo

@@ -61,6 +61,11 @@ Supportato:
 - riferimenti esterni semplici a colonne tramite `SELECTEDVALUE`, `VALUES`, `DISTINCT` nel layer inputs
 - generazione automatica di `manifest.json`, `README.md`, `PACKAGE.md` e `semantic/*.tmdl`
 - registrazione automatica nel `catalog/modules.json` del dominio quando l'output viene scritto dentro una repo-domain del workspace
+- normalizzazione controllata degli artefatti `Auto date/time` generati da Power BI Desktop:
+  - tabelle `LocalDateTable_*`
+  - tabelle `DateTableTemplate_*`
+  - relazioni che puntano solo a tali tabelle
+  - blocchi `variation` che puntano alle loro `Date Hierarchy`
 
 Bloccato automaticamente:
 
@@ -77,6 +82,13 @@ Eccezione controllata su `model.tmdl`:
 
 - il V1 consente il delta additivo deterministico generato da Power BI Desktop quando vengono aggiunte nuove tabelle module-owned, cioe l'aggiunta dei soli `ref table ...` relativi alle nuove tabelle `MOD/_MOD`
 - qualsiasi altra modifica a `model.tmdl` resta bloccata
+
+Eccezione controllata su `Auto date/time`:
+
+- il promotore neutralizza il rumore standard generato da Power BI Desktop se vengono create automaticamente le tabelle `LocalDateTable_*` / `DateTableTemplate_*`
+- il delta finale ignora tali tabelle, le relazioni collegate e i blocchi `variation` aggiunti sui campi data target
+- se oltre a questi pattern compare qualunque altra modifica fuori perimetro, la promotion continua a fallire
+- resta comunque best practice disattivare `Auto date/time` nel workbench, perche riduce rumore e tempi di analisi
 
 ## Support Matrix V1
 
@@ -142,6 +154,7 @@ Copertura attuale del harness:
 - failure path relationships changed
 - failure path strict reference outside `_MOD ... Inputs`
 - failure path qualified measure reference inside `_MOD ... Inputs`
+- normalizzazione di artefatti `Auto date/time`
 - idempotenza output package
 - round-trip promotion -> catalog registration -> validate -> install -> test
 

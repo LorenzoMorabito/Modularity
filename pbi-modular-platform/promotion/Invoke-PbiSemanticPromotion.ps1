@@ -20,6 +20,7 @@ $modulePaths = @(
     "../installer/Modules/Core/Pbi.Schema.psm1",
     "../installer/Modules/Core/Pbi.Project.psm1",
     "Modules/Core/Pbi.SemanticPromotion.Shared.psm1",
+    "Modules/Core/Pbi.SemanticPromotion.AutoDateArtifacts.psm1",
     "Modules/Core/Pbi.SemanticPromotion.Tmdl.psm1",
     "Modules/Core/Pbi.SemanticPromotion.psm1"
 )

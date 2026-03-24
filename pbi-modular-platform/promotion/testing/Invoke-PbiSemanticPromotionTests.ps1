@@ -26,6 +26,7 @@ $modulePaths = @(
     (Join-Path $platformRoot "installer/Modules/Core/Pbi.Project.psm1"),
     (Join-Path $platformRoot "testing/Modules/Common/Pbi.TestResults.psm1"),
     (Join-Path $promotionRoot "Modules/Core/Pbi.SemanticPromotion.Shared.psm1"),
+    (Join-Path $promotionRoot "Modules/Core/Pbi.SemanticPromotion.AutoDateArtifacts.psm1"),
     (Join-Path $promotionRoot "Modules/Core/Pbi.SemanticPromotion.Tmdl.psm1"),
     (Join-Path $promotionRoot "Modules/Core/Pbi.SemanticPromotion.psm1")
 )
@@ -215,6 +216,83 @@ function Add-PbiModelTableRefsToProject {
     Write-PbiUtf8File -Path $modelPath -Content (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
 }
 
+function Add-PbiAutoDateTablesToProject {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [Parameter(Mandatory = $true)][string[]]$TableNames
+    )
+
+    $tablesRoot = Join-Path $Project.SemanticModelPath "definition/tables"
+    foreach ($tableName in @($TableNames | Sort-Object -Unique)) {
+        $tablePath = Join-Path $tablesRoot ($tableName + ".tmdl")
+        $content = @"
+table $tableName
+	showAsVariationsOnly
+
+	column Date
+		dataType: dateTime
+		formatString: Short Date
+		summarizeBy: none
+		sourceColumn: Date
+
+	partition $tableName = calculated
+		mode: import
+		source =
+				CALENDAR ( DATE ( 2020, 1, 1 ), DATE ( 2020, 12, 31 ) )
+"@
+        Write-PbiUtf8File -Path $tablePath -Content $content
+    }
+}
+
+function Add-PbiAutoDateRelationshipsToProject {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [Parameter(Mandatory = $true)][object[]]$Relationships
+    )
+
+    $relationshipsPath = Join-Path $Project.SemanticModelPath "definition/relationships.tmdl"
+    $existingContent = Get-Content -Raw -Path $relationshipsPath
+    $builder = New-Object System.Text.StringBuilder
+    [void]$builder.Append($existingContent.TrimEnd())
+
+    foreach ($relationship in @($Relationships)) {
+        [void]$builder.AppendLine()
+        [void]$builder.AppendLine()
+        [void]$builder.Append(("relationship {0}" -f $relationship.Id))
+        [void]$builder.AppendLine()
+        if ($relationship.JoinOnDateBehavior) {
+            [void]$builder.Append(("	joinOnDateBehavior: {0}" -f $relationship.JoinOnDateBehavior))
+            [void]$builder.AppendLine()
+        }
+
+        [void]$builder.Append(("	fromColumn: {0}" -f $relationship.FromColumn))
+        [void]$builder.AppendLine()
+        [void]$builder.Append(("	toColumn: {0}" -f $relationship.ToColumn))
+        [void]$builder.AppendLine()
+    }
+
+    [void]$builder.AppendLine()
+    Write-PbiUtf8File -Path $relationshipsPath -Content $builder.ToString()
+}
+
+function Add-PbiAutoDateVariationNoiseToProjectTable {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [Parameter(Mandatory = $true)][string]$TableName,
+        [Parameter(Mandatory = $true)][string]$RelationshipId,
+        [Parameter(Mandatory = $true)][string]$HierarchyTableName
+    )
+
+    $tablePath = Join-Path $Project.SemanticModelPath ("definition/tables/" + $TableName + ".tmdl")
+    Add-Content -Path $tablePath -Value @(
+        "",
+        "		variation Variation",
+        "			isDefault",
+        ("			relationship: {0}" -f $RelationshipId),
+        ("			defaultHierarchy: {0}.'Date Hierarchy'" -f $HierarchyTableName)
+    )
+}
+
 function Invoke-PbiModularityCommand {
     param(
         [Parameter(Mandatory = $true)][string]$ScriptPath,
@@ -302,6 +380,34 @@ function Get-PbiTargetFixtureInventory {
     }
 
     return (Get-PbiTmdlInventoryMap -TablePaths $targetPaths)
+}
+
+function Set-PbiTargetFixturesInProject {
+    param(
+        [Parameter(Mandatory = $true)]$Project,
+        [switch]$IncludeAmbiguousSalesMeasure
+    )
+
+    $tablesRoot = Join-Path $Project.SemanticModelPath "definition/tables"
+    $fixtureFiles = @(
+        (Join-Path $fixtureRoot "targets\Corporation.tmdl"),
+        (Join-Path $fixtureRoot "targets\Sales.tmdl")
+    )
+
+    if ($IncludeAmbiguousSalesMeasure) {
+        $fixtureFiles += (Join-Path $fixtureRoot "targets\Sales Duplicate.tmdl")
+    }
+
+    foreach ($fixtureFile in @($fixtureFiles)) {
+        Copy-Item -Path $fixtureFile -Destination (Join-Path $tablesRoot ([System.IO.Path]::GetFileName($fixtureFile))) -Force
+    }
+
+    $tableNames = @("Corporation", "Sales")
+    if ($IncludeAmbiguousSalesMeasure) {
+        $tableNames += "Sales Duplicate"
+    }
+
+    Add-PbiModelTableRefsToProject -Project $Project -TableNames $tableNames
 }
 
 function Invoke-PbiPromotionTestCase {
@@ -506,6 +612,144 @@ table 'Fixture'
         Assert-PbiCondition -Condition (@($coverageErrors | Where-Object { $_ -like "*placeholderizzabili automaticamente*" }).Count -eq 1) -Message "Expected a binding coverage failure for the qualified measure reference."
     }
 
+    $results += Invoke-PbiPromotionTestCase -Name "unit.auto-date-artifact-classification" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $tableNames = @(
+            "MOD Promo Test",
+            "_MOD Promo Test Inputs",
+            "LocalDateTable_12345678-1234-1234-1234-123456789abc",
+            "DateTableTemplate_abcdefab-cdef-cdef-cdef-abcdefabcdef"
+        )
+
+        $artifacts = @(Invoke-PbiPromotionInternal -ScriptBlock {
+            param([string[]]$Names)
+            Get-PbiAutoDateArtifactTableNames -TableNames $Names
+        } -ArgumentList @(,$tableNames))
+
+        Assert-PbiEqual -Actual $artifacts.Count -Expected 2 -Message "Expected two auto-date artifact table names to be classified."
+        Assert-PbiCondition -Condition ($artifacts -contains "LocalDateTable_12345678-1234-1234-1234-123456789abc") -Message "Expected the LocalDateTable artifact to be classified."
+        Assert-PbiCondition -Condition ($artifacts -contains "DateTableTemplate_abcdefab-cdef-cdef-cdef-abcdefabcdef") -Message "Expected the DateTableTemplate artifact to be classified."
+    }
+
+    $results += Invoke-PbiPromotionTestCase -Name "unit.auto-date-table-normalization" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $baselinePath = Join-Path $caseRoot "Quarter.baseline.tmdl"
+        $currentPath = Join-Path $caseRoot "Quarter.current.tmdl"
+        $baselineContent = @"
+table Quarter
+	column 'Quarter Date'
+		dataType: dateTime
+		sourceColumn: quarter_date
+
+		annotation SummarizationSetBy = Automatic
+"@
+        $currentContent = @"
+table Quarter
+	column 'Quarter Date'
+		dataType: dateTime
+		sourceColumn: quarter_date
+
+		variation Variation
+			isDefault
+			relationship: auto_date_rel
+			defaultHierarchy: LocalDateTable_12345678-1234-1234-1234-123456789abc.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+"@
+
+        Write-PbiUtf8File -Path $baselinePath -Content $baselineContent
+        Write-PbiUtf8File -Path $currentPath -Content $currentContent
+
+        $baselineEntry = [PSCustomObject]@{
+            tableName                = "Quarter"
+            sha256                   = (Get-PbiFileSha256 -Path $baselinePath)
+            normalizedAutoDateSha256 = (Get-PbiStringSha256 -Text (Get-PbiNormalizedTableContentRemovingAutoDateVariations -Path $baselinePath))
+        }
+
+        $isAllowed = Invoke-PbiPromotionInternal -ScriptBlock {
+            param($Entry, [string]$Path)
+            Test-PbiSemanticPromotionAllowedTableDelta -BaselineEntry $Entry -CurrentPath $Path
+        } -ArgumentList $baselineEntry, $currentPath
+
+        Assert-PbiCondition -Condition $isAllowed -Message "Expected the table delta containing only an auto-date variation block to be ignored."
+    }
+
+    $results += Invoke-PbiPromotionTestCase -Name "unit.auto-date-relationships-normalization" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $baselinePath = Join-Path $caseRoot "relationships.baseline.tmdl"
+        $currentPath = Join-Path $caseRoot "relationships.current.tmdl"
+        $baselineContent = @"
+relationship rel_keep
+	fromColumn: Sales.Country
+	toColumn: Country.Country
+"@
+        $currentContent = @"
+relationship rel_auto_date
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Sales.QuarterDate
+	toColumn: LocalDateTable_12345678-1234-1234-1234-123456789abc.Date
+
+relationship rel_keep
+	fromColumn: Sales.Country
+	toColumn: Country.Country
+"@
+
+        Write-PbiUtf8File -Path $baselinePath -Content $baselineContent
+        Write-PbiUtf8File -Path $currentPath -Content $currentContent
+
+        $baselineEntry = [PSCustomObject]@{
+            relativePath             = "definition/relationships.tmdl"
+            sha256                   = (Get-PbiFileSha256 -Path $baselinePath)
+            normalizedAutoDateSha256 = (Get-PbiStringSha256 -Text (Get-PbiNormalizedRelationshipsContentRemovingAutoDateArtifacts -Path $baselinePath))
+        }
+
+        $isAllowed = Invoke-PbiPromotionInternal -ScriptBlock {
+            param($Entry, [string]$Path)
+            Test-PbiSemanticPromotionAllowedRelationshipsDelta -BaselineEntry $Entry -CurrentPath $Path
+        } -ArgumentList $baselineEntry, $currentPath
+
+        Assert-PbiCondition -Condition $isAllowed -Message "Expected the relationships delta containing only auto-date relationships to be ignored."
+    }
+
+    $results += Invoke-PbiPromotionTestCase -Name "unit.auto-date-model-delta" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $baselinePath = Join-Path $caseRoot "model.baseline.tmdl"
+        $currentPath = Join-Path $caseRoot "model.current.tmdl"
+        $baselineContent = @"
+model Model
+	ref table Sales
+	ref cultureInfo en-US
+"@
+        $currentContent = @"
+model Model
+	ref table Sales
+	ref table DateTableTemplate_abcdefab-cdef-cdef-cdef-abcdefabcdef
+	ref table LocalDateTable_12345678-1234-1234-1234-123456789abc
+	ref table '_MOD Promo Test Inputs'
+	ref table 'MOD Promo Test'
+	ref cultureInfo en-US
+"@
+        Write-PbiUtf8File -Path $baselinePath -Content $baselineContent
+        Write-PbiUtf8File -Path $currentPath -Content $currentContent
+
+        $baselineEntry = [PSCustomObject]@{
+            sha256          = (Get-PbiFileSha256 -Path $baselinePath)
+            modelTableRefs  = @("Sales")
+            modelBodySha256 = (Get-PbiStringSha256 -Text (Get-PbiNormalizedModelContentWithoutTableRefs -Path $baselinePath))
+        }
+
+        $isAllowed = Invoke-PbiPromotionInternal -ScriptBlock {
+            param($Entry, [string]$Path)
+            Test-PbiSemanticPromotionAllowedModelDelta -BaselineEntry $Entry -CurrentPath $Path -NewTables @("_MOD Promo Test Inputs", "MOD Promo Test")
+        } -ArgumentList $baselineEntry, $currentPath
+
+        Assert-PbiCondition -Condition $isAllowed -Message "Expected the model delta to ignore auto-date refs and allow only additive module table refs."
+    }
+
     $results += Invoke-PbiPromotionTestCase -Name "unit.manifest-generation" -ArtifactRoot $ArtifactRoot -Action {
         param($caseRoot)
 
@@ -541,6 +785,7 @@ function Invoke-PbiPromotionIntegrationTests {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_fixture_simple"
 
         $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "new-promotion-baseline" -Parameters ([ordered]@{
@@ -564,10 +809,69 @@ function Invoke-PbiPromotionIntegrationTests {
         Assert-PbiEqual -Actual (@($delta.blockedFiles).Count) -Expected 0 -Message "Did not expect blocked files in the delta."
     }
 
+    $results += Invoke-PbiPromotionTestCase -Name "integration.auto-date-artifacts-ignored" -ArtifactRoot $ArtifactRoot -Action {
+        param($caseRoot)
+
+        $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
+        $moduleId = "promo_fixture_simple_autodate"
+        $outputRoot = Join-Path $caseRoot "output"
+        $autoDateTemplateTable = "DateTableTemplate_abcdefab-cdef-cdef-cdef-abcdefabcdef"
+        $autoDateLocalTable = "LocalDateTable_12345678-1234-1234-1234-123456789abc"
+        $autoDateRelationshipId = "auto_date_rel_001"
+
+        $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "new-promotion-baseline" -Parameters ([ordered]@{
+            WorkspaceRoot = $resolvedWorkspaceRoot
+            ProjectPath   = $project.PbipPath
+            ModuleId      = $moduleId
+        }) -LogPath (Join-Path $caseRoot "baseline.log")
+
+        Copy-PbiFixtureTablesToProject -FixtureDirectory (Get-PbiFixtureInputDirectory -ScenarioName "simple") -Project $project
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @("_MOD Promo Test Inputs", "MOD Promo Test")
+        Add-PbiAutoDateTablesToProject -Project $project -TableNames @($autoDateTemplateTable, $autoDateLocalTable)
+        Add-PbiModelTableRefsToProject -Project $project -TableNames @($autoDateTemplateTable, $autoDateLocalTable)
+        Add-PbiAutoDateRelationshipsToProject -Project $project -Relationships @(
+            [PSCustomObject]@{
+                Id                 = $autoDateRelationshipId
+                JoinOnDateBehavior = "datePartOnly"
+                FromColumn         = "Quarter.'Quarter Date'"
+                ToColumn           = ($autoDateLocalTable + ".Date")
+            }
+        )
+        Add-PbiAutoDateVariationNoiseToProjectTable -Project $project -TableName "Quarter" -RelationshipId $autoDateRelationshipId -HierarchyTableName $autoDateLocalTable
+
+        $delta = Invoke-PbiPromotionInternal -ScriptBlock {
+            param($PbipPath, $CurrentModuleId)
+            $projectObject = Resolve-PbiConsumerProject -ProjectPath $PbipPath
+            $baseline = Get-PbiSemanticPromotionBaseline -Project $projectObject -ModuleId $CurrentModuleId
+            Get-PbiSemanticPromotionDelta -Project $projectObject -Baseline $baseline
+        } -ArgumentList @($project.PbipPath, $moduleId)
+
+        Assert-PbiEqual -Actual (@($delta.newTables).Count) -Expected 2 -Message "Expected only the module-owned tables to remain in the delta after auto-date normalization."
+        Assert-PbiCondition -Condition ((@($delta.newTables) -join "|") -eq "_MOD Promo Test Inputs|MOD Promo Test") -Message "Unexpected module table set after auto-date normalization."
+        Assert-PbiEqual -Actual (@($delta.modifiedTables).Count) -Expected 0 -Message "Did not expect target-owned table changes after removing auto-date variations."
+        Assert-PbiEqual -Actual (@($delta.blockedFiles).Count) -Expected 0 -Message "Did not expect blocked global files after removing auto-date artifacts."
+        Assert-PbiEqual -Actual (@($delta.autoDateArtifacts.ignoredNewTables).Count) -Expected 2 -Message "Expected both auto-date artifact tables to be tracked as ignored new tables."
+
+        $promotionResult = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "promote-semantic-module" -Parameters ([ordered]@{
+            WorkspaceRoot = $resolvedWorkspaceRoot
+            ProjectPath   = $project.PbipPath
+            Domain        = "shared"
+            ModuleId      = $moduleId
+            OutputRoot    = $outputRoot
+            Force         = $true
+        }) -LogPath (Join-Path $caseRoot "promote.log")
+
+        $actualManifest = Read-PbiJsonFile -Path (Join-Path $outputRoot "manifest.json")
+        Assert-PbiEqual -Actual (@($actualManifest.provides.semanticTables).Count) -Expected 2 -Message "Expected only the authored module tables in the promoted manifest."
+        Assert-PbiContains -ActualText $promotionResult.OutputText -ExpectedFragment "External bindings: 2" -Message "Expected the promotion output to complete successfully with the normalized auto-date artifacts."
+    }
+
     $results += Invoke-PbiPromotionTestCase -Name "integration.golden-simple-package" -ArtifactRoot $ArtifactRoot -Action {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_fixture_simple"
         $outputRoot = Join-Path $caseRoot "output"
 
@@ -610,6 +914,7 @@ function Invoke-PbiPromotionIntegrationTests {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_fixture_multi"
         $outputRoot = Join-Path $caseRoot "output"
 
@@ -641,6 +946,7 @@ function Invoke-PbiPromotionIntegrationTests {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_failure_target"
 
         $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "new-promotion-baseline" -Parameters ([ordered]@{
@@ -666,6 +972,7 @@ function Invoke-PbiPromotionIntegrationTests {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_failure_relationships"
 
         $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "new-promotion-baseline" -Parameters ([ordered]@{
@@ -691,6 +998,7 @@ function Invoke-PbiPromotionIntegrationTests {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_failure_strict"
 
         $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "new-promotion-baseline" -Parameters ([ordered]@{
@@ -717,6 +1025,7 @@ function Invoke-PbiPromotionIntegrationTests {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_failure_qualified_measure"
 
         $null = Invoke-PbiModularityCommand -ScriptPath $invokeModularityScript -CommandName "new-promotion-baseline" -Parameters ([ordered]@{
@@ -743,6 +1052,7 @@ function Invoke-PbiPromotionIntegrationTests {
         param($caseRoot)
 
         $project = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot (Join-Path $caseRoot "workbench")
+        Set-PbiTargetFixturesInProject -Project $project
         $moduleId = "promo_fixture_simple"
         $run1Root = Join-Path $caseRoot "run1"
         $run2Root = Join-Path $caseRoot "run2"
@@ -800,6 +1110,8 @@ function Invoke-PbiPromotionIntegrationTests {
 
         $workbenchProject = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot $sandboxWorkbenchRoot
         $installTargetProject = New-PbiPromotionProjectCopy -SourceProjectPath $SourceProjectPath -DestinationRoot $sandboxInstallTargetRoot
+        Set-PbiTargetFixturesInProject -Project $workbenchProject
+        Set-PbiTargetFixturesInProject -Project $installTargetProject
         $moduleId = "promo_fixture_roundtrip"
         $sandboxInvokeModularityScript = Join-Path $sandboxModularityRoot "pbi-modular-platform\Invoke-PbiModularity.ps1"
 

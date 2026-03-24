@@ -50,5 +50,6 @@ File principali:
 - failure path su `relationships.tmdl`
 - failure path strict fuori da `_MOD ... Inputs`
 - failure path su misura qualificata dentro `_MOD ... Inputs`
+- normalizzazione di artefatti `Auto date/time`
 - idempotenza
 - round-trip installativo su sandbox workspace

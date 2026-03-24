@@ -213,16 +213,28 @@ function Test-PbiSemanticPromotionAllowedModelDelta {
     $currentBodyWithoutRefs = Get-PbiNormalizedModelContentWithoutTableRefs -Path $CurrentPath
     $currentBodySha256 = Get-PbiStringSha256 -Text $currentBodyWithoutRefs
 
-    $newTableSet = @($NewTables | ForEach-Object { [string]$_ } | Sort-Object -Unique)
-    $currentRefs = @(Get-PbiTmdlRefTableNamesFromPath -Path $CurrentPath)
+    $newTableSet = @(
+        @($NewTables | ForEach-Object { [string]$_ }) |
+            Where-Object { -not (Test-PbiAutoDateArtifactTableName -TableName $_) } |
+            Sort-Object -Unique
+    )
+    $currentRefs = @(
+        @(Get-PbiTmdlRefTableNamesFromPath -Path $CurrentPath) |
+            Where-Object { -not (Test-PbiAutoDateArtifactTableName -TableName ([string]$_)) } |
+            Sort-Object -Unique
+    )
 
     if (-not $BaselineEntry.PSObject.Properties["modelTableRefs"] -or -not $BaselineEntry.PSObject.Properties["modelBodySha256"]) {
-        $candidateBaselineContent = Get-PbiRawModelContentRemovingTableRefs -Path $CurrentPath -TableNames $newTableSet
+        $candidateBaselineContent = Get-PbiRawModelContentRemovingTableRefs -Path $CurrentPath -TableNames (@($newTableSet + (Get-PbiAutoDateArtifactTableNames -TableNames (Get-PbiTmdlRefTableNamesFromPath -Path $CurrentPath))))
         $candidateBaselineSha256 = Get-PbiStringSha256 -Text $candidateBaselineContent
         return ($candidateBaselineSha256 -eq [string]$BaselineEntry.sha256)
     }
 
-    $baselineRefs = @($BaselineEntry.modelTableRefs | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+    $baselineRefs = @(
+        @($BaselineEntry.modelTableRefs | ForEach-Object { [string]$_ }) |
+            Where-Object { -not (Test-PbiAutoDateArtifactTableName -TableName $_) } |
+            Sort-Object -Unique
+    )
 
     if ($currentBodySha256 -ne [string]$BaselineEntry.modelBodySha256) {
         return $false
@@ -413,9 +425,10 @@ function New-PbiSemanticPromotionBaselineRecord {
     $tableEntries = New-Object System.Collections.Generic.List[object]
     foreach ($file in (Get-PbiSemanticPromotionTableFiles -Project $Project)) {
         $tableEntries.Add([PSCustomObject]@{
-            tableName    = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
-            relativePath = (Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path $file.FullName)
-            sha256       = (Get-PbiFileSha256 -Path $file.FullName)
+            tableName                = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
+            relativePath             = (Get-PbiRelativePath -BasePath $Project.ProjectRoot -Path $file.FullName)
+            sha256                   = (Get-PbiFileSha256 -Path $file.FullName)
+            normalizedAutoDateSha256 = (Get-PbiStringSha256 -Text (Get-PbiNormalizedTableContentRemovingAutoDateVariations -Path $file.FullName))
         })
     }
 
@@ -430,6 +443,9 @@ function New-PbiSemanticPromotionBaselineRecord {
         if ($relativePath -like "*/model.tmdl" -or $relativePath -like "*\model.tmdl") {
             $entry["modelTableRefs"] = @(Get-PbiTmdlRefTableNamesFromPath -Path $path)
             $entry["modelBodySha256"] = (Get-PbiStringSha256 -Text (Get-PbiNormalizedModelContentWithoutTableRefs -Path $path))
+        }
+        elseif ($relativePath -like "*/relationships.tmdl" -or $relativePath -like "*\relationships.tmdl") {
+            $entry["normalizedAutoDateSha256"] = (Get-PbiStringSha256 -Text (Get-PbiNormalizedRelationshipsContentRemovingAutoDateArtifacts -Path $path))
         }
 
         $globalEntries.Add([PSCustomObject]$entry)

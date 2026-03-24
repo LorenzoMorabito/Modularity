@@ -121,8 +121,10 @@ function Get-PbiSemanticPromotionDelta {
     )
 
     $baselineTableMap = @{}
+    $baselineTableEntries = @{}
     foreach ($entry in @($Baseline.tables)) {
         $baselineTableMap[[string]$entry.tableName] = [string]$entry.sha256
+        $baselineTableEntries[[string]$entry.tableName] = $entry
     }
 
     $currentTableMap = @{}
@@ -131,9 +133,28 @@ function Get-PbiSemanticPromotionDelta {
         $currentTableMap[$tableName] = (Get-PbiFileSha256 -Path $file.FullName)
     }
 
-    $newTables = @($currentTableMap.Keys | Where-Object { -not $baselineTableMap.ContainsKey($_) } | Sort-Object)
-    $modifiedTables = @($baselineTableMap.Keys | Where-Object { $currentTableMap.ContainsKey($_) -and ($currentTableMap[$_] -ne $baselineTableMap[$_]) } | Sort-Object)
-    $removedTables = @($baselineTableMap.Keys | Where-Object { -not $currentTableMap.ContainsKey($_) } | Sort-Object)
+    $rawNewTables = @($currentTableMap.Keys | Where-Object { -not $baselineTableMap.ContainsKey($_) } | Sort-Object)
+    $autoDateArtifactTables = @(Get-PbiAutoDateArtifactTableNames -TableNames @($rawNewTables))
+    $newTables = @($rawNewTables | Where-Object { $autoDateArtifactTables -notcontains $_ } | Sort-Object)
+
+    $modifiedTables = New-Object System.Collections.Generic.List[string]
+    foreach ($tableName in @($baselineTableMap.Keys | Where-Object { $currentTableMap.ContainsKey($_) -and ($currentTableMap[$_] -ne $baselineTableMap[$_]) } | Sort-Object)) {
+        if (Test-PbiAutoDateArtifactTableName -TableName $tableName) {
+            continue
+        }
+
+        $currentPath = Get-PbiSemanticPromotionProjectTablePath -Project $Project -TableName $tableName
+        if (Test-PbiSemanticPromotionAllowedTableDelta -BaselineEntry $baselineTableEntries[$tableName] -CurrentPath $currentPath) {
+            continue
+        }
+
+        $modifiedTables.Add($tableName)
+    }
+
+    $removedTables = @(
+        @($baselineTableMap.Keys | Where-Object { -not $currentTableMap.ContainsKey($_) } | Sort-Object) |
+            Where-Object { -not (Test-PbiAutoDateArtifactTableName -TableName ([string]$_)) }
+    )
 
     $blockedFiles = New-Object System.Collections.Generic.List[string]
     foreach ($entry in @($Baseline.trackedGlobalFiles)) {
@@ -147,6 +168,13 @@ function Get-PbiSemanticPromotionDelta {
                 continue
             }
 
+            if (
+                (([string]$entry.relativePath) -like "*/relationships.tmdl" -or ([string]$entry.relativePath) -like "*\relationships.tmdl") -and
+                (Test-PbiSemanticPromotionAllowedRelationshipsDelta -BaselineEntry $entry -CurrentPath $absolutePath)
+            ) {
+                continue
+            }
+
             $blockedFiles.Add([string]$entry.relativePath)
         }
     }
@@ -156,6 +184,9 @@ function Get-PbiSemanticPromotionDelta {
         modifiedTables = @($modifiedTables)
         removedTables  = @($removedTables)
         blockedFiles   = @($blockedFiles | Sort-Object -Unique)
+        autoDateArtifacts = [PSCustomObject]@{
+            ignoredNewTables = @($autoDateArtifactTables)
+        }
     }
 }
 
@@ -661,10 +692,11 @@ function Invoke-PbiSemanticModulePromotion {
         packageRoot        = $packageRoot
         catalogPath        = if ($catalogRegistration) { $catalogRegistration.CatalogPath } else { "" }
         delta              = [ordered]@{
-            newTables      = @($delta.newTables)
-            modifiedTables = @($delta.modifiedTables)
-            removedTables  = @($delta.removedTables)
-            blockedFiles   = @($delta.blockedFiles)
+            newTables         = @($delta.newTables)
+            modifiedTables    = @($delta.modifiedTables)
+            removedTables     = @($delta.removedTables)
+            blockedFiles      = @($delta.blockedFiles)
+            autoDateArtifacts = $delta.autoDateArtifacts
         }
         externalReferences = @($externalReferences)
         generatedBindings  = @($bindingSummary)
