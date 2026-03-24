@@ -75,6 +75,7 @@ Guided binding implementato:
 Design evolutivi documentati:
 
 - [docs/lifecycle.md](./docs/lifecycle.md)
+- [docs/installation-handbook.md](./docs/installation-handbook.md)
 - [docs/interactive-binding-design.md](./docs/interactive-binding-design.md)
 - [docs/package-semantic-standard.md](./docs/package-semantic-standard.md)
 - [docs/package-documentation-standard.md](./docs/package-documentation-standard.md)
